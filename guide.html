@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="https://taheralsharif.github.io/realestate_calcualtor/">
+    <title>Real Estate Investment Guide</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Initialize theme before page loads to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-house-door-fill me-2"></i>
+                Real Estate Calculator
+            </a>
+            <button class="btn btn-outline-primary" id="themeToggle">
+                <i class="bi bi-sun-fill"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h1 class="display-4 mb-4 text-center">
+                    <i class="bi bi-book-fill me-2"></i>
+                    Real Estate Investment Guide
+                </h1>
+                <p class="lead text-center mb-5">
+                    Comprehensive resources and guides to help you make informed real estate investment decisions.
+                </p>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card h-100 calculator-card">
+                            <div class="card-body">
+                                <h3 class="card-title">
+                                    <i class="bi bi-cash-stack me-2"></i>
+                                    Understanding Cash Flow
+                                </h3>
+                                <p class="card-text">
+                                    Learn the fundamentals of real estate cash flow analysis and why it's crucial for investment success.
+                                </p>
+                                <a href="https://www.investopedia.com/articles/mortgages-real-estate/08/real-estate-cash-flow.asp" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>
+                                    Read Article
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 calculator-card">
+                            <div class="card-body">
+                                <h3 class="card-title">
+                                    <i class="bi bi-percent me-2"></i>
+                                    ROI and Cash-on-Cash Return
+                                </h3>
+                                <p class="card-text">
+                                    Master the art of calculating and interpreting return on investment metrics for real estate.
+                                </p>
+                                <a href="https://www.biggerpockets.com/blog/real-estate-roi-calculations" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>
+                                    Read Article
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 calculator-card">
+                            <div class="card-body">
+                                <h3 class="card-title">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Market Analysis
+                                </h3>
+                                <p class="card-text">
+                                    Learn how to analyze real estate markets and identify profitable investment opportunities.
+                                </p>
+                                <a href="https://www.realtor.com/advice/invest/how-to-analyze-real-estate-market/" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>
+                                    Read Article
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card h-100 calculator-card">
+                            <div class="card-body">
+                                <h3 class="card-title">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    Risk Management
+                                </h3>
+                                <p class="card-text">
+                                    Essential strategies for managing risks in real estate investment and protecting your portfolio.
+                                </p>
+                                <a href="https://www.investopedia.com/articles/mortgages-real-estate/08/real-estate-risk-management.asp" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>
+                                    Read Article
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <h2 class="mb-4">
+                        <i class="bi bi-calculator me-2"></i>
+                        Key Investment Metrics Explained
+                    </h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Cash Flow</h4>
+                                    <p class="card-text">
+                                        The net amount of money generated or lost from your investment property each month. 
+                                        Positive cash flow means your rental income exceeds your expenses.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Cash-on-Cash Return</h4>
+                                    <p class="card-text">
+                                        Measures the annual return on your initial investment. Calculated as annual cash flow 
+                                        divided by total cash invested (down payment + closing costs).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">Break-Even Period</h4>
+                                    <p class="card-text">
+                                        The time it takes to recover your initial investment through rental income. 
+                                        A shorter break-even period indicates a better investment opportunity.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">DSCR (Debt Service Coverage Ratio)</h4>
+                                    <p class="card-text">
+                                        Measures your property's ability to cover mortgage payments. A DSCR above 1.0 
+                                        indicates positive cash flow and is preferred by lenders.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <h2 class="mb-4">
+                        <i class="bi bi-book me-2"></i>
+                        Recommended Books
+                    </h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        The Millionaire Real Estate Investor
+                                    </h4>
+                                    <p class="card-text">
+                                        By Gary Keller - A highly recommended resource that compiles practical strategies from over 100 millionaire investors, covering foundational concepts and wealth-building techniques in real estate.
+                                    </p>
+                                    <a href="https://learn.roofstock.com/blog/real-estate-investing-books" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        Long-Distance Real Estate Investing
+                                    </h4>
+                                    <p class="card-text">
+                                        By David Greene - A comprehensive guide for investing in properties remotely, managing out-of-state properties, and developing a solid strategy for distant investments.
+                                    </p>
+                                    <a href="https://learn.roofstock.com/blog/real-estate-investing-books" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        What Every Real Estate Investor Needs to Know About Cash Flow
+                                    </h4>
+                                    <p class="card-text">
+                                        By Frank Gallinelli - Detailed insights into key financial metrics essential for evaluating investment performance and cash flow management.
+                                    </p>
+                                    <a href="https://learn.roofstock.com/blog/real-estate-investing-books" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        The Advanced Guide to Real Estate Investing
+                                    </h4>
+                                    <p class="card-text">
+                                        By Ken McElroy - Advanced strategies for serious investors, covering profitable markets, due diligence, financing, and portfolio management.
+                                    </p>
+                                    <a href="https://www.amazon.com/Advanced-Guide-Real-Estate-Investing/dp/1937832511" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-amazon me-2"></i>
+                                        Get on Amazon
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        The Book on Rental Property Investing
+                                    </h4>
+                                    <p class="card-text">
+                                        By Brandon Turner - A comprehensive resource on investing in rental properties, covering property analysis, financing options, managing tenants, and maximizing returns.
+                                    </p>
+                                    <a href="https://www.investmentnews.com/guides/top-10-best-books-on-real-estate-investing/258901" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Learn More
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-book-fill me-2"></i>
+                                        The Unofficial Guide to Real Estate Investing
+                                    </h4>
+                                    <p class="card-text">
+                                        By Martin Stone and Spencer Strauss - Practical tips on developing effective real estate investment plans, analyzing property investments, and finding reliable real estate professionals.
+                                    </p>
+                                    <a href="https://www.amazon.com/Unofficial-Guide-Estate-Investing-Guides/dp/0764537091" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-amazon me-2"></i>
+                                        Get on Amazon
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <h2 class="mb-4">
+                        <i class="bi bi-globe me-2"></i>
+                        Online Resources
+                    </h2>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-link-45deg me-2"></i>
+                                        Property Investment for Beginners
+                                    </h4>
+                                    <p class="card-text">
+                                        REI Hub's comprehensive guide designed specifically for beginners, explaining property types, common pitfalls, and strategies for successful investment.
+                                    </p>
+                                    <a href="https://www.reihub.net/resources/property-investment-for-beginners/" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Read Article
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-link-45deg me-2"></i>
+                                        Real Estate Investing for Beginners: 5 Skills
+                                    </h4>
+                                    <p class="card-text">
+                                        Harvard Professional Development's informative article outlining essential skills required to succeed in real estate investment.
+                                    </p>
+                                    <a href="https://professional.dce.harvard.edu/blog/real-estate-investing-for-beginners-5-skills-of-successful-investors/" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Read Article
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-link-45deg me-2"></i>
+                                        The Real Estate Investing Guide for Beginners
+                                    </h4>
+                                    <p class="card-text">
+                                        BiggerPockets' well-rounded online guide from the leading real estate investment community, covering everything beginners need to know to get started.
+                                    </p>
+                                    <a href="https://www.biggerpockets.com/guides/ultimate-real-estate-investing-guide" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Read Article
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 calculator-card">
+                                <div class="card-body">
+                                    <h4 class="card-title">
+                                        <i class="bi bi-link-45deg me-2"></i>
+                                        9 Best Books for Beginner Real Estate Investors
+                                    </h4>
+                                    <p class="card-text">
+                                        SmartAsset's curated list of top recommended books to help new real estate investors understand and navigate the market effectively.
+                                    </p>
+                                    <a href="https://smartasset.com/mortgage/best-books-for-beginner-real-estate-investors" target="_blank" class="btn btn-outline-primary">
+                                        <i class="bi bi-box-arrow-up-right me-2"></i>
+                                        Read Article
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-lightbulb me-2"></i>
+                Make informed real estate investment decisions with our calculator
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
