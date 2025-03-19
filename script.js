@@ -30,8 +30,22 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
         const formData = new FormData(this);
         const data = {};
         
-        for (let [key, value] of formData.entries()) {
-            data[key] = parseFloat(value);
+        // List of required fields
+        const requiredFields = ['housePrice', 'downPayment', 'interestRate', 'loanTerm', 'monthlyRent', 
+                              'propertyTax', 'insurance', 'maintenance', 'vacancyRate', 'turnoverCost'];
+        
+        for (const field of requiredFields) {
+            const value = formData.get(field);
+            if (value === null || value === '') {
+                throw new Error(`Missing required field: ${field}`);
+            }
+            
+            const numValue = parseFloat(value);
+            if (isNaN(numValue)) {
+                throw new Error(`Invalid number value for ${field}`);
+            }
+            
+            data[field] = numValue;
         }
         
         // Calculate investment
@@ -50,6 +64,21 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
 });
 
 function calculateInvestment(data) {
+    // Validate input data
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid input data');
+    }
+
+    // Validate required fields
+    const requiredFields = ['housePrice', 'downPayment', 'interestRate', 'loanTerm', 'monthlyRent', 
+                          'propertyTax', 'insurance', 'maintenance', 'vacancyRate', 'turnoverCost'];
+    
+    for (const field of requiredFields) {
+        if (data[field] === undefined || isNaN(data[field])) {
+            throw new Error(`Missing or invalid value for ${field}`);
+        }
+    }
+
     // Convert percentages to decimals
     const downPaymentPercent = data.downPayment / 100;
     const interestRatePercent = data.interestRate / 100;
@@ -58,12 +87,26 @@ function calculateInvestment(data) {
     // Calculate loan amount
     const loanAmount = data.housePrice * (1 - downPaymentPercent);
     
-    // Calculate monthly mortgage payment
-    const monthlyRate = interestRatePercent / 12;
-    const numberOfPayments = data.loanTerm * 12;
-    const monthlyMortgage = loanAmount * 
-        (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
-        (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    // Calculate monthly mortgage payment with error handling
+    let monthlyMortgage;
+    try {
+        const monthlyRate = interestRatePercent / 12;
+        const numberOfPayments = data.loanTerm * 12;
+        
+        if (monthlyRate === 0) {
+            monthlyMortgage = loanAmount / numberOfPayments;
+        } else {
+            monthlyMortgage = loanAmount * 
+                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+                (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+        }
+        
+        if (isNaN(monthlyMortgage) || !isFinite(monthlyMortgage)) {
+            throw new Error('Invalid mortgage calculation');
+        }
+    } catch (error) {
+        throw new Error('Error calculating mortgage payment. Please check your interest rate and loan term.');
+    }
     
     // Calculate monthly costs
     const monthlyPropertyTax = data.propertyTax / 12;
@@ -87,27 +130,41 @@ function calculateInvestment(data) {
     const cashOnCashReturn = (annualProfit / downPaymentAmount) * 100;
     
     // Calculate break-even period
-    const breakEvenPeriod = downPaymentAmount / monthlyProfit;
+    const breakEvenPeriod = monthlyProfit > 0 ? downPaymentAmount / monthlyProfit : Infinity;
     
     // Calculate DSCR
-    const dscr = data.monthlyRent / totalMonthlyCosts;
+    const dscr = totalMonthlyCosts > 0 ? data.monthlyRent / totalMonthlyCosts : 0;
     
-    return {
-        monthlyMortgage,
-        monthlyPropertyTax,
-        monthlyInsurance,
-        monthlyMaintenance,
-        monthlyVacancyCost,
-        monthlyTurnoverCost,
-        totalMonthlyCosts,
-        monthlyProfit,
-        annualProfit,
-        cashOnCashReturn,
-        breakEvenPeriod,
-        dscr,
-        monthlyRent: data.monthlyRent,
-        downPaymentAmount
+    // Calculate ROI
+    const roi = (annualProfit / data.housePrice) * 100;
+    
+    // Return results with validation
+    const results = {
+        monthlyMortgage: Number(monthlyMortgage.toFixed(2)),
+        monthlyPropertyTax: Number(monthlyPropertyTax.toFixed(2)),
+        monthlyInsurance: Number(monthlyInsurance.toFixed(2)),
+        monthlyMaintenance: Number(monthlyMaintenance.toFixed(2)),
+        monthlyVacancyCost: Number(monthlyVacancyCost.toFixed(2)),
+        monthlyTurnoverCost: Number(monthlyTurnoverCost.toFixed(2)),
+        totalMonthlyCosts: Number(totalMonthlyCosts.toFixed(2)),
+        monthlyProfit: Number(monthlyProfit.toFixed(2)),
+        annualProfit: Number(annualProfit.toFixed(2)),
+        cashOnCashReturn: Number(cashOnCashReturn.toFixed(2)),
+        breakEvenPeriod: Number(breakEvenPeriod.toFixed(1)),
+        dscr: Number(dscr.toFixed(2)),
+        roi: Number(roi.toFixed(2)),
+        monthlyRent: Number(data.monthlyRent.toFixed(2)),
+        downPaymentAmount: Number(downPaymentAmount.toFixed(2))
     };
+
+    // Validate results
+    for (const [key, value] of Object.entries(results)) {
+        if (isNaN(value)) {
+            throw new Error(`Invalid calculation result for ${key}`);
+        }
+    }
+
+    return results;
 }
 
 function displayResults(results) {
