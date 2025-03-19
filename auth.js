@@ -12,13 +12,11 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const analytics = firebase.analytics();
 
 // DOM Elements
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
 const googleLoginBtn = document.getElementById('googleLogin');
-const githubLoginBtn = document.getElementById('githubLogin');
 
 // Password Reset Function
 async function resetPassword(email) {
@@ -64,17 +62,6 @@ signupForm.addEventListener('submit', async (e) => {
 // Google Sign In
 googleLoginBtn.addEventListener('click', async () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-        await auth.signInWithPopup(provider);
-        window.location.href = 'calculator.html';
-    } catch (error) {
-        alert(error.message);
-    }
-});
-
-// GitHub Sign In
-githubLoginBtn.addEventListener('click', async () => {
-    const provider = new firebase.auth.GithubAuthProvider();
     try {
         await auth.signInWithPopup(provider);
         window.location.href = 'calculator.html';
