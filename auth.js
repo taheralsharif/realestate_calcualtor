@@ -13,24 +13,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// DOM Elements
-const loginForm = document.getElementById('loginForm');
-const signupForm = document.getElementById('signupForm');
-const googleLoginBtn = document.getElementById('googleLogin');
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toast = document.querySelector('.toast');
+    const toastMessage = document.getElementById('toastMessage');
+    if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        new bootstrap.Toast(toast).show();
+    }
+}
 
 // Password Reset Function
 async function resetPassword(email) {
     try {
         await auth.sendPasswordResetEmail(email);
-        alert('Password reset email sent! Please check your inbox.');
+        showToast('Password reset email sent! Please check your inbox.');
     } catch (error) {
-        alert(error.message);
+        showToast(error.message, 'danger');
+        throw error;
     }
 }
 
 // Login with email and password
-if (loginForm) {
-    loginForm.addEventListener('submit', async (e) => {
+if (document.getElementById('loginForm')) {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -38,49 +46,56 @@ if (loginForm) {
         try {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             if (!userCredential.user.emailVerified) {
-                alert('Please verify your email address before logging in.');
+                showToast('Please verify your email address before logging in.', 'danger');
                 await auth.signOut();
                 return;
             }
             window.location.href = 'calculator.html';
         } catch (error) {
-            alert(error.message);
+            showToast(error.message, 'danger');
         }
     });
 }
 
 // Sign up with email and password
-signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
+if (document.getElementById('signupForm')) {
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
 
-    try {
-        await auth.createUserWithEmailAndPassword(email, password);
-        // Send email verification
-        await auth.currentUser.sendEmailVerification();
-        alert('Please check your email to verify your account.');
-        window.location.href = 'calculator.html';
-    } catch (error) {
-        alert(error.message);
-    }
-});
+        try {
+            await auth.createUserWithEmailAndPassword(email, password);
+            // Send email verification
+            await auth.currentUser.sendEmailVerification();
+            showToast('Please check your email to verify your account.');
+            window.location.href = 'calculator.html';
+        } catch (error) {
+            showToast(error.message, 'danger');
+        }
+    });
+}
 
 // Google Sign In
-if (googleLoginBtn) {
-    googleLoginBtn.addEventListener('click', async () => {
+if (document.getElementById('googleLogin')) {
+    document.getElementById('googleLogin').addEventListener('click', async () => {
         const provider = new firebase.auth.GoogleAuthProvider();
         try {
             const result = await auth.signInWithPopup(provider);
             if (!result.user.emailVerified) {
                 await result.user.sendEmailVerification();
-                alert('Please verify your email address before continuing.');
+                showToast('Please verify your email address before continuing.', 'danger');
                 await auth.signOut();
                 return;
             }
             window.location.href = 'calculator.html';
         } catch (error) {
-            alert(error.message);
+            console.error('Google Sign In Error:', error);
+            if (error.code === 'auth/unauthorized-domain') {
+                showToast('This domain is not authorized for Google sign-in. Please contact support.', 'danger');
+            } else {
+                showToast(error.message, 'danger');
+            }
         }
     });
 }
@@ -90,7 +105,7 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         // User is signed in
         if (!user.emailVerified) {
-            alert('Please verify your email address before continuing.');
+            showToast('Please verify your email address before continuing.', 'danger');
             auth.signOut();
             return;
         }
@@ -119,6 +134,7 @@ auth.onAuthStateChanged((user) => {
                     window.location.href = 'login.html';
                 }).catch((error) => {
                     console.error('Error signing out:', error);
+                    showToast('Error signing out. Please try again.', 'danger');
                 });
             });
         }

@@ -126,13 +126,81 @@
                                 Investment Calculator
                             </h2>
                             <form id="calculatorForm">
-                                <!-- ... existing calculator form ... -->
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="propertyPrice" class="form-label">Property Price</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="propertyPrice" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="downPayment" class="form-label">Down Payment</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="downPayment" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="interestRate" class="form-label">Interest Rate (%)</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="interestRate" step="0.1" required>
+                                            <span class="input-group-text">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="loanTerm" class="form-label">Loan Term</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="loanTerm" required>
+                                            <span class="input-group-text">years</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="monthlyRent" class="form-label">Monthly Rent</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="monthlyRent" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="monthlyExpenses" class="form-label">Monthly Expenses</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="monthlyExpenses" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-calculator me-2"></i>
+                                            Calculate
+                                        </button>
+                                    </div>
+                                </div>
                             </form>
                         </div>
                     </div>
 
                     <div class="card shadow-sm results-card d-none mt-4" id="resultsCard">
-                        <!-- ... existing results card ... -->
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h3 class="card-title mb-0">Investment Analysis</h3>
+                                <div class="btn-group">
+                                    <button class="btn btn-outline-primary btn-sm" id="downloadPDF">
+                                        <i class="bi bi-file-pdf me-1"></i>
+                                        PDF
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" id="downloadExcel">
+                                        <i class="bi bi-file-excel me-1"></i>
+                                        Excel
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <tbody id="results"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
