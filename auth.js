@@ -138,81 +138,76 @@ if (document.getElementById('signupForm')) {
 }
 
 // Google Sign In
-if (document.getElementById('googleLogin')) {
-    document.getElementById('googleLogin').addEventListener('click', async () => {
-        const provider = new firebase.auth.GoogleAuthProvider();
+if (document.getElementById('googleLoginBtn')) {
+    document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         try {
+            const provider = new firebase.auth.GoogleAuthProvider();
             const result = await auth.signInWithPopup(provider);
-            if (!result.user.emailVerified) {
-                await result.user.sendEmailVerification();
-                showToast('Please verify your email address before continuing.', 'danger');
-                await auth.signOut();
-                return;
+            if (result.user) {
+                showToast('Successfully logged in with Google!');
+                // Redirect to calculator page after successful login
+                window.location.href = 'calculator.html';
             }
-            window.location.href = 'calculator.html';
         } catch (error) {
-            console.error('Google Sign In Error:', error);
-            if (error.code === 'auth/unauthorized-domain') {
-                showToast('This domain is not authorized for Google sign-in. Please contact support.', 'danger');
-            } else {
-                showToast(error.message, 'danger');
-            }
+            console.error('Google login error:', error);
+            showToast('Error logging in with Google: ' + error.message, 'error');
         }
     });
 }
 
-// Check authentication state
-auth.onAuthStateChanged((user) => {
+// Update user profile in navigation
+function updateUserProfile(user) {
+    const userDropdown = document.getElementById('userDropdown');
+    const loginButton = document.getElementById('loginButton');
+    const userName = document.getElementById('userName');
+    const userPhoto = document.getElementById('userPhoto');
+
     if (user) {
         // User is signed in
-        if (!user.emailVerified) {
-            showToast('Please verify your email address before continuing.', 'danger');
-            auth.signOut();
-            return;
-        }
-        
-        // Update UI for logged-in users
-        const userDropdown = document.getElementById('userDropdown');
-        const loginButton = document.getElementById('loginButton');
-        const userMenuButton = document.getElementById('userMenuButton');
-        const userPhoto = document.getElementById('userPhoto');
-        const userName = document.getElementById('userName');
-        const calculatorContent = document.getElementById('calculatorContent');
-        
         if (userDropdown) userDropdown.classList.remove('d-none');
         if (loginButton) loginButton.classList.add('d-none');
-        if (calculatorContent) calculatorContent.classList.remove('d-none');
         
-        if (userPhoto) userPhoto.src = user.photoURL || 'https://via.placeholder.com/32';
-        if (userName) userName.textContent = user.displayName || user.email;
+        // Update user name
+        if (userName) userName.textContent = user.displayName || 'User';
         
-        // Handle logout
-        const logoutLink = document.getElementById('logoutLink');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                auth.signOut().then(() => {
-                    window.location.href = 'login.html';
-                }).catch((error) => {
-                    console.error('Error signing out:', error);
-                    showToast('Error signing out. Please try again.', 'danger');
-                });
-            });
+        // Update user photo
+        if (userPhoto && user.photoURL) {
+            userPhoto.src = user.photoURL;
+        }
+        
+        // Add welcome message to the page
+        const welcomeMessage = document.createElement('div');
+        welcomeMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
+        welcomeMessage.innerHTML = `
+            Welcome back, ${user.displayName || 'User'}! 
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        const container = document.querySelector('.container');
+        if (container) {
+            container.insertBefore(welcomeMessage, container.firstChild);
         }
     } else {
         // User is signed out
-        const userDropdown = document.getElementById('userDropdown');
-        const loginButton = document.getElementById('loginButton');
-        const calculatorContent = document.getElementById('calculatorContent');
-        
         if (userDropdown) userDropdown.classList.add('d-none');
         if (loginButton) loginButton.classList.remove('d-none');
-        if (calculatorContent) calculatorContent.classList.add('d-none');
-        
-        // Redirect to login if trying to access protected pages
-        if (window.location.pathname.includes('calculator.html') || 
-            window.location.pathname.includes('comparison.html')) {
-            window.location.href = 'login.html';
-        }
+    }
+}
+
+// Check authentication state
+auth.onAuthStateChanged((user) => {
+    updateUserProfile(user);
+    
+    // Handle logout
+    const logoutLink = document.getElementById('logoutLink');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Error signing out:', error);
+                showToast('Error signing out. Please try again.', 'danger');
+            });
+        });
     }
 }); 
