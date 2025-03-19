@@ -101,12 +101,26 @@ function calculateInvestment(data) {
     // Calculate loan amount
     const loanAmount = data.housePrice * (1 - downPaymentPercent);
     
-    // Calculate monthly mortgage payment
-    const monthlyRate = interestRatePercent / 12;
-    const numberOfPayments = data.loanTerm * 12;
-    const monthlyMortgage = loanAmount * 
-        (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
-        (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    // Calculate monthly mortgage payment with error handling
+    let monthlyMortgage;
+    try {
+        const monthlyRate = interestRatePercent / 12;
+        const numberOfPayments = data.loanTerm * 12;
+        
+        if (monthlyRate === 0) {
+            monthlyMortgage = loanAmount / numberOfPayments;
+        } else {
+            monthlyMortgage = loanAmount * 
+                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+                (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+        }
+        
+        if (isNaN(monthlyMortgage) || !isFinite(monthlyMortgage)) {
+            throw new Error('Invalid mortgage calculation');
+        }
+    } catch (error) {
+        throw new Error('Error calculating mortgage payment. Please check your interest rate and loan term.');
+    }
     
     // Calculate monthly costs
     const monthlyPropertyTax = data.propertyTax / 12;
@@ -135,6 +149,9 @@ function calculateInvestment(data) {
     // Calculate DSCR
     const dscr = totalMonthlyCosts > 0 ? data.monthlyRent / totalMonthlyCosts : 0;
     
+    // Calculate ROI
+    const roi = (annualProfit / data.housePrice) * 100;
+    
     // Return results with validation
     const results = {
         monthlyMortgage: Number(monthlyMortgage.toFixed(2)),
@@ -149,6 +166,7 @@ function calculateInvestment(data) {
         cashOnCashReturn: Number(cashOnCashReturn.toFixed(2)),
         breakEvenPeriod: Number(breakEvenPeriod.toFixed(1)),
         dscr: Number(dscr.toFixed(2)),
+        roi: Number(roi.toFixed(2)),
         monthlyRent: Number(data.monthlyRent.toFixed(2)),
         downPaymentAmount: Number(downPaymentAmount.toFixed(2))
     };
@@ -264,28 +282,58 @@ function generateComparisonSummary(property1Results, property2Results) {
         `Property 2 has a ${Math.abs(dscrDiff).toFixed(2)} higher DSCR` :
         `Property 1 has a ${Math.abs(dscrDiff).toFixed(2)} higher DSCR`;
     
-    // Determine overall recommendation
+    // Compare ROI
+    const roiDiff = property2Results.roi - property1Results.roi;
+    const roiComparison = roiDiff > 0 ?
+        `Property 2 has a ${Math.abs(roiDiff).toFixed(2)}% higher ROI` :
+        `Property 1 has a ${Math.abs(roiDiff).toFixed(2)}% higher ROI`;
+    
+    // Determine overall recommendation with weighted scoring
     let recommendation = '';
-    const profitWeight = 0.4;
-    const cocWeight = 0.3;
-    const beWeight = 0.2;
-    const dscrWeight = 0.1;
+    const profitWeight = 0.3;
+    const cocWeight = 0.25;
+    const beWeight = 0.15;
+    const dscrWeight = 0.15;
+    const roiWeight = 0.15;
     
     const property1Score = 
         (property1Results.monthlyProfit * profitWeight) +
         (property1Results.cashOnCashReturn * cocWeight) +
         (-property1Results.breakEvenPeriod * beWeight) +
-        (property1Results.dscr * dscrWeight);
+        (property1Results.dscr * dscrWeight) +
+        (property1Results.roi * roiWeight);
     
     const property2Score = 
         (property2Results.monthlyProfit * profitWeight) +
         (property2Results.cashOnCashReturn * cocWeight) +
         (-property2Results.breakEvenPeriod * beWeight) +
-        (property2Results.dscr * dscrWeight);
+        (property2Results.dscr * dscrWeight) +
+        (property2Results.roi * roiWeight);
     
     recommendation = property1Score > property2Score ?
         'Property 1 appears to be the better investment option overall.' :
         'Property 2 appears to be the better investment option overall.';
+    
+    // Add risk assessment
+    const riskAssessment = `
+        <div class="mt-3">
+            <h5>Risk Assessment</h5>
+            <ul class="list-group">
+                <li class="list-group-item">
+                    <strong>Property 1:</strong> 
+                    ${property1Results.dscr >= 1.2 ? 'Low risk' : 
+                      property1Results.dscr >= 1.0 ? 'Moderate risk' : 'High risk'} 
+                    (DSCR: ${property1Results.dscr.toFixed(2)})
+                </li>
+                <li class="list-group-item">
+                    <strong>Property 2:</strong> 
+                    ${property2Results.dscr >= 1.2 ? 'Low risk' : 
+                      property2Results.dscr >= 1.0 ? 'Moderate risk' : 'High risk'} 
+                    (DSCR: ${property2Results.dscr.toFixed(2)})
+                </li>
+            </ul>
+        </div>
+    `;
     
     summaryHTML += `
         <div class="col-md-6">
@@ -295,6 +343,7 @@ function generateComparisonSummary(property1Results, property2Results) {
                 <li class="list-group-item">${cocComparison}</li>
                 <li class="list-group-item">${beComparison}</li>
                 <li class="list-group-item">${dscrComparison}</li>
+                <li class="list-group-item">${roiComparison}</li>
             </ul>
         </div>
         <div class="col-md-6">
@@ -302,6 +351,7 @@ function generateComparisonSummary(property1Results, property2Results) {
             <div class="alert alert-info">
                 ${recommendation}
             </div>
+            ${riskAssessment}
         </div>
     `;
     
