@@ -16,6 +16,7 @@
     </script>
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand" href="index.html">
@@ -34,18 +35,6 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="calculator.html">
-                            <i class="bi bi-calculator me-1"></i>
-                            Calculator
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="comparison.html">
-                            <i class="bi bi-graph-up me-1"></i>
-                            Compare
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="guide.html">
                             <i class="bi bi-book me-1"></i>
                             Guide
@@ -53,18 +42,6 @@
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">
-                    <div class="dropdown" id="userDropdown">
-                        <button class="btn btn-link nav-link dropdown-toggle d-none" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="" alt="Profile" class="rounded-circle me-2" id="userPhoto" style="width: 32px; height: 32px;">
-                            <span id="userName">User</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
-                            <li><a class="dropdown-item" href="#" id="profileLink"><i class="bi bi-person me-2"></i>Profile</a></li>
-                            <li><a class="dropdown-item" href="#" id="settingsLink"><i class="bi bi-gear me-2"></i>Settings</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#" id="logoutLink"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
-                        </ul>
-                    </div>
                     <a href="login.html" class="btn btn-outline-light ms-2" id="loginButton">
                         <i class="bi bi-box-arrow-in-right me-1"></i>
                         Login
@@ -74,32 +51,62 @@
         </div>
     </nav>
 
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8 text-center">
-                <h1 class="display-4 mb-4">
-                    <i class="bi bi-house-door me-2"></i>
-                    Real Estate Investment Calculator
-                </h1>
-                <p class="lead mb-4">
-                    Make informed real estate investment decisions with our comprehensive calculator.
-                    Analyze potential properties, compare investments, and maximize your returns.
-                </p>
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h3 class="card-title mb-4">Get Started</h3>
-                        <p class="card-text mb-4">
-                            To access our powerful real estate investment tools, please log in or create an account.
-                        </p>
-                        <div class="d-flex justify-content-center gap-3">
-                            <a href="login.html" class="btn btn-primary btn-lg">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>
-                                Login
-                            </a>
-                            <a href="login.html#signup" class="btn btn-success btn-lg">
-                                <i class="bi bi-person-plus me-2"></i>
-                                Sign Up
-                            </a>
+    <!-- Hero Section -->
+    <div class="bg-primary text-white py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-4">Make Informed Real Estate Investment Decisions</h1>
+                    <p class="lead mb-4">Our powerful calculator helps you analyze potential real estate investments with detailed metrics and insights.</p>
+                    <div class="d-flex gap-3">
+                        <a href="#calculator" class="btn btn-light btn-lg">
+                            <i class="bi bi-calculator me-2"></i>
+                            Try Calculator
+                        </a>
+                        <a href="login.html" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-person-plus me-2"></i>
+                            Create Account
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1073&q=80" 
+                         alt="Real Estate Investment" 
+                         class="img-fluid rounded shadow">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Why Choose Our Calculator?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-calculator display-4 text-primary mb-3"></i>
+                            <h3 class="h5">Comprehensive Analysis</h3>
+                            <p>Calculate ROI, cash flow, and other key metrics to make informed decisions.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up display-4 text-primary mb-3"></i>
+                            <h3 class="h5">Property Comparison</h3>
+                            <p>Compare multiple properties side by side to find the best investment opportunity.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="bi bi-cloud-arrow-up display-4 text-primary mb-3"></i>
+                            <h3 class="h5">Save & Track</h3>
+                            <p>Create an account to save your calculations and track your investment portfolio.</p>
                         </div>
                     </div>
                 </div>
@@ -107,49 +114,48 @@
         </div>
     </div>
 
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© 2024 Real Estate Calculator. All rights reserved.</span>
+    <!-- Calculator Section -->
+    <div id="calculator" class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h2 class="card-title mb-4">
+                                <i class="bi bi-calculator me-2"></i>
+                                Investment Calculator
+                            </h2>
+                            <form id="calculatorForm">
+                                <!-- ... existing calculator form ... -->
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="card shadow-sm results-card d-none mt-4" id="resultsCard">
+                        <!-- ... existing results card ... -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Real Estate Investment Calculator</h5>
+                    <p class="mb-0">Make informed decisions with our powerful investment analysis tools.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">&copy; 2024 Real Estate Calculator. All rights reserved.</p>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
-    <script src="auth.js"></script>
-    <script>
-        // Check authentication state
-        auth.onAuthStateChanged((user) => {
-            const userDropdown = document.getElementById('userDropdown');
-            const loginButton = document.getElementById('loginButton');
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userPhoto = document.getElementById('userPhoto');
-            const userName = document.getElementById('userName');
-            
-            if (user) {
-                // User is signed in
-                userDropdown.classList.remove('d-none');
-                loginButton.classList.add('d-none');
-                
-                // Update user info
-                userPhoto.src = user.photoURL || 'https://via.placeholder.com/32';
-                userName.textContent = user.displayName || user.email;
-                
-                // Handle logout
-                document.getElementById('logoutLink').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    auth.signOut().then(() => {
-                        window.location.href = 'login.html';
-                    }).catch((error) => {
-                        console.error('Error signing out:', error);
-                    });
-                });
-            } else {
-                // User is signed out
-                userDropdown.classList.add('d-none');
-                loginButton.classList.remove('d-none');
-            }
-        });
-    </script>
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html> 
