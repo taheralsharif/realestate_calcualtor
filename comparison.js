@@ -53,7 +53,9 @@ function getFormData(formId) {
     const data = {};
     
     for (let [key, value] of formData.entries()) {
-        data[key] = parseFloat(value);
+        // Remove the number from the field name (e.g., 'housePrice1' -> 'housePrice')
+        const cleanKey = key.replace(/\d+$/, '');
+        data[cleanKey] = parseFloat(value);
     }
     
     return data;
