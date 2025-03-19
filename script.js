@@ -2,6 +2,37 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('Calculator initialized');
     const calculatorForm = document.getElementById('calculatorForm');
     const resultsDiv = document.getElementById('results');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = themeToggle.querySelector('i');
+
+    // Theme handling
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        themeIcon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+        localStorage.setItem('theme', theme);
+    }
+
+    // Initialize theme from localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        setTheme(savedTheme);
+    } else {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setTheme(prefersDark ? 'dark' : 'light');
+    }
+
+    // Theme toggle event listener
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    // Listen for system theme changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+        if (!localStorage.getItem('theme')) {
+            setTheme(e.matches ? 'dark' : 'light');
+        }
+    });
 
     if (!calculatorForm) {
         console.error('Calculator form not found!');
@@ -89,9 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const analysis = generateInvestmentAnalysis(monthlyProfitLoss, roi);
             document.getElementById('investmentAnalysis').textContent = analysis;
 
-            // Show results
+            // Show results with animation
             resultsDiv.classList.remove('d-none');
             resultsDiv.classList.add('show');
+            resultsDiv.style.opacity = '0';
+            setTimeout(() => {
+                resultsDiv.style.opacity = '1';
+            }, 10);
             console.log('Results displayed successfully');
         } catch (error) {
             console.error('Error updating UI:', error);

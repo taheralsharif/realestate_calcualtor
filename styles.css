@@ -1,69 +1,149 @@
+:root {
+    --primary-color: #0d6efd;
+    --secondary-color: #6c757d;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --background-color: #f8f9fa;
+    --card-background: #ffffff;
+    --text-color: #212529;
+    --border-color: #dee2e6;
+    --input-background: #ffffff;
+    --input-border: #dee2e6;
+    --input-text: #212529;
+    --footer-background: #f8f9fa;
+    --footer-text: #6c757d;
+}
+
+[data-bs-theme="dark"] {
+    --primary-color: #0d6efd;
+    --secondary-color: #adb5bd;
+    --success-color: #198754;
+    --danger-color: #dc3545;
+    --background-color: #212529;
+    --card-background: #2c3034;
+    --text-color: #f8f9fa;
+    --border-color: #495057;
+    --input-background: #343a40;
+    --input-border: #495057;
+    --input-text: #f8f9fa;
+    --footer-background: #212529;
+    --footer-text: #adb5bd;
+}
+
 body {
-    background-color: #f8f9fa;
+    background-color: var(--background-color);
+    color: var(--text-color);
     min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.card {
-    border: none;
-    border-radius: 15px;
+.navbar {
+    background-color: var(--card-background);
+    border-bottom: 1px solid var(--border-color);
 }
 
-.card-body {
-    padding: 2rem;
-}
-
-.form-control {
-    border-radius: 8px;
-    padding: 0.75rem;
-    border: 1px solid #dee2e6;
-}
-
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-}
-
-.btn-primary {
-    padding: 0.75rem;
-    border-radius: 8px;
+.navbar-brand {
+    color: var(--text-color) !important;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
-#results {
+.navbar-brand i {
+    color: var(--primary-color);
+}
+
+.calculator-card, .results-card {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
     transition: all 0.3s ease;
 }
 
-#results.show {
-    display: block !important;
-}
-
-.lead {
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-h1 {
-    color: #2c3e50;
-    font-weight: 700;
-}
-
-h3 {
-    color: #2c3e50;
-    font-weight: 600;
-}
-
-h5 {
-    color: #34495e;
-    font-weight: 600;
+.card-title {
+    color: var(--text-color);
 }
 
 .form-label {
+    color: var(--text-color);
     font-weight: 500;
-    color: #495057;
 }
 
+.form-control {
+    background-color: var(--input-background);
+    border-color: var(--input-border);
+    color: var(--input-text);
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background-color: var(--input-background);
+    border-color: var(--primary-color);
+    color: var(--input-text);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.calculate-btn {
+    padding: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+}
+
+.calculate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.costs-section, .income-section {
+    padding: 1.5rem;
+    border-radius: 8px;
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+}
+
+.total-costs, .total-income {
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.lead {
+    color: var(--text-color);
+}
+
+.footer {
+    background-color: var(--footer-background);
+    color: var(--footer-text);
+    border-top: 1px solid var(--border-color);
+}
+
+#themeToggle {
+    transition: all 0.3s ease;
+}
+
+#themeToggle:hover {
+    transform: rotate(180deg);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
     .card-body {
         padding: 1.5rem;
@@ -71,5 +151,10 @@ h5 {
     
     .container {
         padding: 1rem;
+    }
+
+    .costs-section, .income-section {
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
 } 
