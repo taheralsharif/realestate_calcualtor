@@ -7,29 +7,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Theme handling
     function setTheme(theme) {
+        console.log('Setting theme:', theme);
         document.documentElement.setAttribute('data-bs-theme', theme);
         themeIcon.className = theme === 'dark' ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
         localStorage.setItem('theme', theme);
+        // Force a reflow to ensure styles are applied
+        document.body.offsetHeight;
     }
 
     // Initialize theme from localStorage or system preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        setTheme(savedTheme);
-    } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        setTheme(prefersDark ? 'dark' : 'light');
+    function initializeTheme() {
+        console.log('Initializing theme');
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            console.log('Found saved theme:', savedTheme);
+            setTheme(savedTheme);
+        } else {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            console.log('No saved theme, using system preference:', prefersDark ? 'dark' : 'light');
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
     }
+
+    // Initialize theme immediately
+    initializeTheme();
 
     // Theme toggle event listener
     themeToggle.addEventListener('click', function() {
         const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        console.log('Theme toggle clicked, switching from', currentTheme, 'to', newTheme);
+        setTheme(newTheme);
     });
 
     // Listen for system theme changes
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
         if (!localStorage.getItem('theme')) {
+            console.log('System theme changed, updating to:', e.matches ? 'dark' : 'light');
             setTheme(e.matches ? 'dark' : 'light');
         }
     });

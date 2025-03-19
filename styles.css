@@ -12,6 +12,7 @@
     --input-text: #212529;
     --footer-background: #f8f9fa;
     --footer-text: #6c757d;
+    transition: all 0.3s ease;
 }
 
 [data-bs-theme="dark"] {
@@ -28,6 +29,10 @@
     --input-text: #f8f9fa;
     --footer-background: #212529;
     --footer-text: #adb5bd;
+}
+
+html {
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 body {
