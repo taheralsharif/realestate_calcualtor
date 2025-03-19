@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="https://taheralsharif.github.io/realestate_calcualtor/">
+    <title>Property Comparison - Real Estate Investment Calculator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Initialize theme before page loads to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            } else {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                document.documentElement.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="bi bi-house-door-fill me-2"></i>
+                Real Estate Calculator
+            </a>
+            <button class="btn btn-outline-primary" id="themeToggle">
+                <i class="bi bi-sun-fill"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-12">
+                <h2 class="text-center mb-4">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Compare Properties
+                </h2>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Property 1 -->
+            <div class="col-md-6">
+                <div class="card calculator-card">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="bi bi-house-door me-2"></i>
+                            Property 1
+                        </h3>
+                        <form id="property1Form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="housePrice1" class="form-label">House Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="housePrice1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="downPayment1" class="form-label">Down Payment (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="downPayment1" value="20" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="interestRate1" class="form-label">Interest Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="interestRate1" step="0.1" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="loanTerm1" class="form-label">Loan Term (years)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="loanTerm1" value="30" required>
+                                        <span class="input-group-text">years</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="monthlyRent1" class="form-label">Expected Monthly Rent</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="monthlyRent1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="propertyTax1" class="form-label">Annual Property Tax</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="propertyTax1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="insurance1" class="form-label">Annual Insurance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="insurance1" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="maintenance1" class="form-label">Monthly Maintenance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="maintenance1" value="100" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="vacancyRate1" class="form-label">Vacancy Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="vacancyRate1" value="5" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="turnoverCost1" class="form-label">Annual Turnover Cost</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="turnoverCost1" value="1000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Property 2 -->
+            <div class="col-md-6">
+                <div class="card calculator-card">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="bi bi-house-door me-2"></i>
+                            Property 2
+                        </h3>
+                        <form id="property2Form">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="housePrice2" class="form-label">House Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="housePrice2" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="downPayment2" class="form-label">Down Payment (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="downPayment2" value="20" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="interestRate2" class="form-label">Interest Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="interestRate2" step="0.1" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="loanTerm2" class="form-label">Loan Term (years)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="loanTerm2" value="30" required>
+                                        <span class="input-group-text">years</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="monthlyRent2" class="form-label">Expected Monthly Rent</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="monthlyRent2" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="propertyTax2" class="form-label">Annual Property Tax</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="propertyTax2" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="insurance2" class="form-label">Annual Insurance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="insurance2" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="maintenance2" class="form-label">Monthly Maintenance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="maintenance2" value="100" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="vacancyRate2" class="form-label">Vacancy Rate (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="vacancyRate2" value="5" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="turnoverCost2" class="form-label">Annual Turnover Cost</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="turnoverCost2" value="1000" required>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <button type="button" class="btn btn-primary btn-lg" id="compareButton">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Compare Properties
+                </button>
+            </div>
+        </div>
+
+        <!-- Comparison Results -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card results-card d-none" id="comparisonResults">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Comparison Results
+                        </h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Property 1 Analysis</h4>
+                                <div id="property1Results" class="mb-4"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Property 2 Analysis</h4>
+                                <div id="property2Results" class="mb-4"></div>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <h4 class="mb-3">Comparison Summary</h4>
+                            <p id="comparisonSummary" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer mt-auto py-3">
+        <div class="container text-center">
+            <p class="mb-0">
+                <i class="bi bi-lightbulb me-2"></i>
+                Make informed real estate investment decisions with our calculator
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="comparison.js"></script>
+</body>
+</html> 

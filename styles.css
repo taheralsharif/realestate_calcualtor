@@ -7,6 +7,7 @@
     --card-background: #ffffff;
     --text-color: #212529;
     --border-color: #dee2e6;
+    --hover-color: #e9ecef;
     --input-background: #ffffff;
     --input-border: #dee2e6;
     --input-text: #212529;
@@ -17,13 +18,14 @@
 
 [data-bs-theme="dark"] {
     --primary-color: #0d6efd;
-    --secondary-color: #adb5bd;
+    --secondary-color: #6c757d;
     --success-color: #198754;
     --danger-color: #dc3545;
     --background-color: #212529;
-    --card-background: #2c3034;
+    --card-background: #343a40;
     --text-color: #f8f9fa;
     --border-color: #495057;
+    --hover-color: #495057;
     --input-background: #343a40;
     --input-border: #495057;
     --input-text: #f8f9fa;
@@ -40,11 +42,14 @@ body {
     color: var(--text-color);
     min-height: 100vh;
     transition: background-color 0.3s ease, color 0.3s ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .navbar {
     background-color: var(--card-background);
     border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
 }
 
 .navbar-brand {
@@ -59,67 +64,124 @@ body {
 .calculator-card, .results-card {
     background-color: var(--card-background);
     border: 1px solid var(--border-color);
-    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .card-title {
     color: var(--text-color);
+    font-weight: 600;
 }
 
 .form-label {
     color: var(--text-color);
     font-weight: 500;
+    margin-bottom: 0.5rem;
 }
 
 .form-control {
-    background-color: var(--input-background);
-    border-color: var(--input-border);
-    color: var(--input-text);
-    transition: all 0.3s ease;
+    background-color: var(--background-color);
+    border-color: var(--border-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
 .form-control:focus {
-    background-color: var(--input-background);
+    background-color: var(--background-color);
     border-color: var(--primary-color);
-    color: var(--input-text);
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    color: var(--text-color);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-.calculate-btn {
-    padding: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease;
-}
-
-.calculate-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.costs-section, .income-section {
-    padding: 1.5rem;
-    border-radius: 8px;
-    background-color: var(--card-background);
-    border: 1px solid var(--border-color);
-}
-
-.total-costs, .total-income {
-    font-size: 1.1rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-}
-
-.lead {
+.input-group-text {
+    background-color: var(--background-color);
+    border-color: var(--border-color);
     color: var(--text-color);
 }
 
+.table {
+    color: var(--text-color);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--hover-color);
+}
+
+.table-primary {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.table-success {
+    background-color: rgba(25, 135, 84, 0.1);
+}
+
+.table-danger {
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.result-item {
+    background-color: var(--input-background);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-item label {
+    color: var(--secondary-color);
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.result-item span {
+    color: var(--text-color);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+#investmentAnalysis {
+    background-color: var(--input-background);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    line-height: 1.6;
+}
+
 .footer {
-    background-color: var(--footer-background);
-    color: var(--footer-text);
+    background-color: var(--card-background);
     border-top: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 1rem 0;
+    margin-top: auto;
 }
 
 #themeToggle {
@@ -133,6 +195,7 @@ body {
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -150,16 +213,23 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .card-body {
-        padding: 1.5rem;
+    .container {
+        padding: 0 1rem;
     }
     
-    .container {
-        padding: 1rem;
-    }
-
-    .costs-section, .income-section {
-        padding: 1rem;
+    .card {
         margin-bottom: 1rem;
+    }
+    
+    .result-item {
+        margin-bottom: 0.75rem;
+    }
+    
+    .result-item span {
+        font-size: 1.1rem;
+    }
+    
+    .table-responsive {
+        margin-bottom: 0;
     }
 } 

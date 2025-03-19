@@ -21,33 +21,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Calculator functionality
-document.getElementById('calculatorForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
+// Property comparison functionality
+document.getElementById('compareButton').addEventListener('click', function() {
     try {
-        // Get form data
-        const formData = new FormData(this);
-        const data = {};
+        // Get form data for both properties
+        const property1Data = getFormData('property1Form');
+        const property2Data = getFormData('property2Form');
         
-        for (let [key, value] of formData.entries()) {
-            data[key] = parseFloat(value);
-        }
-        
-        // Calculate investment
-        const results = calculateInvestment(data);
+        // Calculate results for both properties
+        const property1Results = calculateInvestment(property1Data);
+        const property2Results = calculateInvestment(property2Data);
         
         // Display results
-        displayResults(results);
+        displayResults(property1Results, property2Results);
         
-        // Show results card
-        document.getElementById('resultsCard').classList.remove('d-none');
+        // Show comparison results section
+        document.getElementById('comparisonResults').classList.remove('d-none');
+        
+        // Generate comparison summary
+        generateComparisonSummary(property1Results, property2Results);
         
     } catch (error) {
-        console.error('Error calculating investment:', error);
-        alert('An error occurred while calculating the investment. Please check your input values and try again.');
+        console.error('Error comparing properties:', error);
+        alert('An error occurred while comparing the properties. Please check your input values and try again.');
     }
 });
+
+function getFormData(formId) {
+    const form = document.getElementById(formId);
+    const formData = new FormData(form);
+    const data = {};
+    
+    for (let [key, value] of formData.entries()) {
+        data[key] = parseFloat(value);
+    }
+    
+    return data;
+}
 
 function calculateInvestment(data) {
     // Convert percentages to decimals
@@ -110,9 +120,18 @@ function calculateInvestment(data) {
     };
 }
 
-function displayResults(results) {
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = `
+function displayResults(property1Results, property2Results) {
+    // Display Property 1 results
+    const property1ResultsDiv = document.getElementById('property1Results');
+    property1ResultsDiv.innerHTML = generateResultsHTML(property1Results);
+    
+    // Display Property 2 results
+    const property2ResultsDiv = document.getElementById('property2Results');
+    property2ResultsDiv.innerHTML = generateResultsHTML(property2Results);
+}
+
+function generateResultsHTML(results) {
+    return `
         <div class="table-responsive">
             <table class="table table-hover">
                 <tbody>
@@ -172,4 +191,77 @@ function displayResults(results) {
             </table>
         </div>
     `;
+}
+
+function generateComparisonSummary(property1Results, property2Results) {
+    const summary = document.getElementById('comparisonSummary');
+    let summaryHTML = '<div class="row">';
+    
+    // Compare monthly profit
+    const profitDiff = property2Results.monthlyProfit - property1Results.monthlyProfit;
+    const profitComparison = profitDiff > 0 ? 
+        `Property 2 generates $${Math.abs(profitDiff).toFixed(2)} more monthly profit` :
+        `Property 1 generates $${Math.abs(profitDiff).toFixed(2)} more monthly profit`;
+    
+    // Compare cash-on-cash return
+    const cocDiff = property2Results.cashOnCashReturn - property1Results.cashOnCashReturn;
+    const cocComparison = cocDiff > 0 ?
+        `Property 2 has a ${Math.abs(cocDiff).toFixed(2)}% higher cash-on-cash return` :
+        `Property 1 has a ${Math.abs(cocDiff).toFixed(2)}% higher cash-on-cash return`;
+    
+    // Compare break-even period
+    const beDiff = property2Results.breakEvenPeriod - property1Results.breakEvenPeriod;
+    const beComparison = beDiff > 0 ?
+        `Property 1 reaches break-even ${Math.abs(beDiff).toFixed(1)} months faster` :
+        `Property 2 reaches break-even ${Math.abs(beDiff).toFixed(1)} months faster`;
+    
+    // Compare DSCR
+    const dscrDiff = property2Results.dscr - property1Results.dscr;
+    const dscrComparison = dscrDiff > 0 ?
+        `Property 2 has a ${Math.abs(dscrDiff).toFixed(2)} higher DSCR` :
+        `Property 1 has a ${Math.abs(dscrDiff).toFixed(2)} higher DSCR`;
+    
+    // Determine overall recommendation
+    let recommendation = '';
+    const profitWeight = 0.4;
+    const cocWeight = 0.3;
+    const beWeight = 0.2;
+    const dscrWeight = 0.1;
+    
+    const property1Score = 
+        (property1Results.monthlyProfit * profitWeight) +
+        (property1Results.cashOnCashReturn * cocWeight) +
+        (-property1Results.breakEvenPeriod * beWeight) +
+        (property1Results.dscr * dscrWeight);
+    
+    const property2Score = 
+        (property2Results.monthlyProfit * profitWeight) +
+        (property2Results.cashOnCashReturn * cocWeight) +
+        (-property2Results.breakEvenPeriod * beWeight) +
+        (property2Results.dscr * dscrWeight);
+    
+    recommendation = property1Score > property2Score ?
+        'Property 1 appears to be the better investment option overall.' :
+        'Property 2 appears to be the better investment option overall.';
+    
+    summaryHTML += `
+        <div class="col-md-6">
+            <h5>Key Comparisons</h5>
+            <ul class="list-group">
+                <li class="list-group-item">${profitComparison}</li>
+                <li class="list-group-item">${cocComparison}</li>
+                <li class="list-group-item">${beComparison}</li>
+                <li class="list-group-item">${dscrComparison}</li>
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h5>Recommendation</h5>
+            <div class="alert alert-info">
+                ${recommendation}
+            </div>
+        </div>
+    `;
+    
+    summaryHTML += '</div>';
+    summary.innerHTML = summaryHTML;
 } 
