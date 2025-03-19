@@ -49,7 +49,7 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
         }
         
         // Calculate investment
-        const results = calculateInvestment(data);
+        results = calculateInvestment(data);
         
         // Display results
         displayResults(results);
@@ -229,4 +229,125 @@ function displayResults(results) {
             </table>
         </div>
     `;
-} 
+}
+
+// Download functionality
+document.getElementById('downloadPDF').addEventListener('click', function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(16);
+    doc.text('Real Estate Investment Analysis', 14, 15);
+    doc.setFontSize(12);
+    
+    // Get the results table
+    const table = document.querySelector('#results table');
+    const rows = Array.from(table.querySelectorAll('tr')).map(row => 
+        Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
+    );
+    
+    // Add the table
+    doc.autoTable({
+        head: [['Metric', 'Value']],
+        body: rows,
+        startY: 25,
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [66, 139, 202] }
+    });
+    
+    // Add risk assessment
+    const riskLevel = results.dscr >= 1.2 ? 'Low' : results.dscr >= 1.0 ? 'Moderate' : 'High';
+    const riskY = doc.lastAutoTable.finalY + 10;
+    doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${results.dscr.toFixed(2)})`, 14, riskY);
+    
+    // Add investment analysis
+    const analysisY = riskY + 10;
+    doc.text('Investment Analysis:', 14, analysisY);
+    doc.setFontSize(10);
+    const analysis = generateInvestmentAnalysis(results);
+    doc.text(analysis, 14, analysisY + 7);
+    
+    // Save the PDF
+    doc.save('real-estate-analysis.pdf');
+});
+
+document.getElementById('downloadExcel').addEventListener('click', function() {
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Get the results table
+    const table = document.querySelector('#results table');
+    const rows = Array.from(table.querySelectorAll('tr')).map(row => 
+        Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
+    );
+    
+    // Create worksheet
+    const ws = XLSX.utils.aoa_to_sheet([
+        ['Real Estate Investment Analysis'],
+        [''],
+        ['Metric', 'Value'],
+        ...rows
+    ]);
+    
+    // Add risk assessment
+    const riskLevel = results.dscr >= 1.2 ? 'Low' : results.dscr >= 1.0 ? 'Moderate' : 'High';
+    XLSX.utils.sheet_add_aoa(ws, [
+        [''],
+        ['Risk Assessment'],
+        ['Risk Level', riskLevel],
+        ['DSCR', results.dscr.toFixed(2)]
+    ], { origin: -1 });
+    
+    // Add investment analysis
+    XLSX.utils.sheet_add_aoa(ws, [
+        [''],
+        ['Investment Analysis'],
+        [generateInvestmentAnalysis(results)]
+    ], { origin: -1 });
+    
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Analysis');
+    
+    // Save the Excel file
+    XLSX.writeFile(wb, 'real-estate-analysis.xlsx');
+});
+
+function generateInvestmentAnalysis(results) {
+    let analysis = '';
+    
+    // Monthly cash flow analysis
+    if (results.monthlyProfit >= 0) {
+        analysis += `The property generates a positive monthly cash flow of $${results.monthlyProfit.toFixed(2)}. `;
+    } else {
+        analysis += `The property has a negative monthly cash flow of $${Math.abs(results.monthlyProfit).toFixed(2)}. `;
+    }
+    
+    // Annual return analysis
+    analysis += `The annual profit/loss is $${results.annualProfit.toFixed(2)}. `;
+    
+    // Cash-on-cash return analysis
+    analysis += `The cash-on-cash return is ${results.cashOnCashReturn.toFixed(2)}%. `;
+    
+    // Break-even analysis
+    if (results.breakEvenPeriod !== Infinity) {
+        analysis += `The property will break even in ${results.breakEvenPeriod.toFixed(1)} months. `;
+    } else {
+        analysis += 'The property will not break even at current rates. ';
+    }
+    
+    // DSCR analysis
+    if (results.dscr >= 1.2) {
+        analysis += 'The DSCR indicates a low-risk investment.';
+    } else if (results.dscr >= 1.0) {
+        analysis += 'The DSCR indicates a moderate-risk investment.';
+    } else {
+        analysis += 'The DSCR indicates a high-risk investment.';
+    }
+    
+    return analysis;
+}
+
+// Store results globally for download functions
+let results = null; 
