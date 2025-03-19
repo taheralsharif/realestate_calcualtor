@@ -49,27 +49,27 @@
                                     <label for="housePrice" class="form-label">House Price</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="housePrice" required>
+                                        <input type="number" class="form-control" id="housePrice" name="housePrice" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="downPayment" class="form-label">Down Payment (%)</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="downPayment" value="20" required>
+                                        <input type="number" class="form-control" id="downPayment" name="downPayment" value="20" required>
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="interestRate" class="form-label">Interest Rate (%)</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="interestRate" step="0.1" required>
+                                        <input type="number" class="form-control" id="interestRate" name="interestRate" step="0.1" required>
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="loanTerm" class="form-label">Loan Term (years)</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="loanTerm" value="30" required>
+                                        <input type="number" class="form-control" id="loanTerm" name="loanTerm" value="30" required>
                                         <span class="input-group-text">years</span>
                                     </div>
                                 </div>
@@ -77,34 +77,34 @@
                                     <label for="monthlyRent" class="form-label">Expected Monthly Rent</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="monthlyRent" required>
+                                        <input type="number" class="form-control" id="monthlyRent" name="monthlyRent" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="propertyTax" class="form-label">Annual Property Tax</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="propertyTax" required>
+                                        <input type="number" class="form-control" id="propertyTax" name="propertyTax" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="insurance" class="form-label">Annual Insurance</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="insurance" required>
+                                        <input type="number" class="form-control" id="insurance" name="insurance" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="maintenance" class="form-label">Monthly Maintenance</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="maintenance" value="100" required>
+                                        <input type="number" class="form-control" id="maintenance" name="maintenance" value="100" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="vacancyRate" class="form-label">Vacancy Rate (%)</label>
                                     <div class="input-group">
-                                        <input type="number" class="form-control" id="vacancyRate" value="5" required>
+                                        <input type="number" class="form-control" id="vacancyRate" name="vacancyRate" value="5" required>
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
@@ -112,7 +112,7 @@
                                     <label for="turnoverCost" class="form-label">Annual Turnover Cost</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="turnoverCost" value="1000" required>
+                                        <input type="number" class="form-control" id="turnoverCost" name="turnoverCost" value="1000" required>
                                     </div>
                                 </div>
                             </div>
@@ -126,96 +126,13 @@
                     </div>
                 </div>
 
-                <div class="card results-card d-none mt-4" id="results">
+                <div class="card results-card d-none mt-4" id="resultsCard">
                     <div class="card-body">
                         <h2 class="card-title mb-4">
                             <i class="bi bi-graph-up me-2"></i>
                             Results
                         </h2>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Mortgage Payment</label>
-                                    <span id="mortgagePayment">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Property Tax</label>
-                                    <span id="monthlyPropertyTax">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Insurance</label>
-                                    <span id="monthlyInsurance">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Maintenance</label>
-                                    <span id="monthlyMaintenance">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Vacancy Cost</label>
-                                    <span id="monthlyVacancy">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Turnover Cost</label>
-                                    <span id="monthlyTurnover">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Total Monthly Costs</label>
-                                    <span id="totalMonthlyCosts">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Rental Income</label>
-                                    <span id="monthlyRentalIncome">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Monthly Profit/Loss</label>
-                                    <span id="monthlyProfitLoss">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Annual Profit/Loss</label>
-                                    <span id="annualProfitLoss">$0</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Cash-on-Cash Return</label>
-                                    <span id="cashOnCashReturn">0%</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Break-Even Period</label>
-                                    <span id="breakEvenMonths">0 months</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="result-item">
-                                    <label>Debt Service Coverage Ratio</label>
-                                    <span id="dscr">0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-4">
-                            <h4 class="mb-3">Investment Analysis</h4>
-                            <p id="investmentAnalysis" class="mb-0"></p>
-                        </div>
+                        <div id="results"></div>
                     </div>
                 </div>
             </div>
