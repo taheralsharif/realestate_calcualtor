@@ -142,7 +142,7 @@ if (document.getElementById('googleLoginBtn')) {
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            const result = await auth.signInWithPopup(provider);
+            const result = await firebase.auth().signInWithPopup(provider);
             if (result.user) {
                 showToast('Successfully logged in with Google!');
                 // Redirect to calculator page after successful login

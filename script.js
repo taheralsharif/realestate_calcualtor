@@ -63,108 +63,62 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
     }
 });
 
+// Calculate investment metrics
 function calculateInvestment(data) {
-    // Validate input data
-    if (!data || typeof data !== 'object') {
-        throw new Error('Invalid input data');
-    }
-
-    // Validate required fields
-    const requiredFields = ['housePrice', 'downPayment', 'interestRate', 'loanTerm', 'monthlyRent', 
-                          'propertyTax', 'insurance', 'maintenance', 'vacancyRate', 'turnoverCost'];
-    
-    for (const field of requiredFields) {
-        if (data[field] === undefined || isNaN(data[field])) {
-            throw new Error(`Missing or invalid value for ${field}`);
-        }
-    }
-
-    // Convert percentages to decimals
-    const downPaymentPercent = data.downPayment / 100;
-    const interestRatePercent = data.interestRate / 100;
-    const vacancyRatePercent = data.vacancyRate / 100;
-    
-    // Calculate loan amount
-    const loanAmount = data.housePrice * (1 - downPaymentPercent);
-    
-    // Calculate monthly mortgage payment with error handling
-    let monthlyMortgage;
     try {
-        const monthlyRate = interestRatePercent / 12;
-        const numberOfPayments = data.loanTerm * 12;
-        
-        if (monthlyRate === 0) {
-            monthlyMortgage = loanAmount / numberOfPayments;
-        } else {
-            monthlyMortgage = loanAmount * 
-                (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
-                (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+        // Convert string inputs to numbers
+        const propertyPrice = parseFloat(data.propertyPrice);
+        const downPayment = parseFloat(data.downPayment);
+        const interestRate = parseFloat(data.interestRate) / 100;
+        const loanTerm = parseInt(data.loanTerm);
+        const monthlyRent = parseFloat(data.monthlyRent);
+        const monthlyExpenses = parseFloat(data.monthlyExpenses);
+
+        // Validate inputs
+        if (isNaN(propertyPrice) || isNaN(downPayment) || isNaN(interestRate) || 
+            isNaN(loanTerm) || isNaN(monthlyRent) || isNaN(monthlyExpenses)) {
+            throw new Error('Please enter valid numbers for all fields');
         }
-        
-        if (isNaN(monthlyMortgage) || !isFinite(monthlyMortgage)) {
-            throw new Error('Invalid mortgage calculation');
-        }
+
+        // Calculate monthly mortgage payment
+        const loanAmount = propertyPrice - downPayment;
+        const monthlyRate = interestRate / 12;
+        const numberOfPayments = loanTerm * 12;
+        const monthlyMortgage = loanAmount * 
+            (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+            (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+
+        // Calculate total monthly costs
+        const totalMonthlyCosts = monthlyMortgage + monthlyExpenses;
+
+        // Calculate monthly profit/loss
+        const monthlyProfit = monthlyRent - totalMonthlyCosts;
+
+        // Calculate annual profit/loss
+        const annualProfit = monthlyProfit * 12;
+
+        // Calculate cash-on-cash return
+        const cashOnCashReturn = (annualProfit / downPayment) * 100;
+
+        // Calculate break-even period (in months)
+        const breakEvenPeriod = downPayment / monthlyProfit;
+
+        // Calculate DSCR (Debt Service Coverage Ratio)
+        const dscr = monthlyRent / totalMonthlyCosts;
+
+        return {
+            monthlyMortgage: monthlyMortgage.toFixed(2),
+            totalMonthlyCosts: totalMonthlyCosts.toFixed(2),
+            monthlyProfit: monthlyProfit.toFixed(2),
+            annualProfit: annualProfit.toFixed(2),
+            cashOnCashReturn: cashOnCashReturn.toFixed(2),
+            breakEvenPeriod: breakEvenPeriod.toFixed(1),
+            dscr: dscr.toFixed(2)
+        };
     } catch (error) {
-        throw new Error('Error calculating mortgage payment. Please check your interest rate and loan term.');
+        console.error('Calculation error:', error);
+        throw new Error('An error occurred while calculating the investment. Please check your input values and try again.');
     }
-    
-    // Calculate monthly costs
-    const monthlyPropertyTax = data.propertyTax / 12;
-    const monthlyInsurance = data.insurance / 12;
-    const monthlyMaintenance = data.maintenance;
-    const monthlyVacancyCost = data.monthlyRent * vacancyRatePercent;
-    const monthlyTurnoverCost = data.turnoverCost / 12;
-    
-    const totalMonthlyCosts = monthlyMortgage + monthlyPropertyTax + 
-        monthlyInsurance + monthlyMaintenance + monthlyVacancyCost + 
-        monthlyTurnoverCost;
-    
-    // Calculate monthly profit/loss
-    const monthlyProfit = data.monthlyRent - totalMonthlyCosts;
-    
-    // Calculate annual profit/loss
-    const annualProfit = monthlyProfit * 12;
-    
-    // Calculate cash-on-cash return
-    const downPaymentAmount = data.housePrice * downPaymentPercent;
-    const cashOnCashReturn = (annualProfit / downPaymentAmount) * 100;
-    
-    // Calculate break-even period
-    const breakEvenPeriod = monthlyProfit > 0 ? downPaymentAmount / monthlyProfit : Infinity;
-    
-    // Calculate DSCR
-    const dscr = totalMonthlyCosts > 0 ? data.monthlyRent / totalMonthlyCosts : 0;
-    
-    // Calculate ROI
-    const roi = (annualProfit / data.housePrice) * 100;
-    
-    // Return results with validation
-    const results = {
-        monthlyMortgage: Number(monthlyMortgage.toFixed(2)),
-        monthlyPropertyTax: Number(monthlyPropertyTax.toFixed(2)),
-        monthlyInsurance: Number(monthlyInsurance.toFixed(2)),
-        monthlyMaintenance: Number(monthlyMaintenance.toFixed(2)),
-        monthlyVacancyCost: Number(monthlyVacancyCost.toFixed(2)),
-        monthlyTurnoverCost: Number(monthlyTurnoverCost.toFixed(2)),
-        totalMonthlyCosts: Number(totalMonthlyCosts.toFixed(2)),
-        monthlyProfit: Number(monthlyProfit.toFixed(2)),
-        annualProfit: Number(annualProfit.toFixed(2)),
-        cashOnCashReturn: Number(cashOnCashReturn.toFixed(2)),
-        breakEvenPeriod: Number(breakEvenPeriod.toFixed(1)),
-        dscr: Number(dscr.toFixed(2)),
-        roi: Number(roi.toFixed(2)),
-        monthlyRent: Number(data.monthlyRent.toFixed(2)),
-        downPaymentAmount: Number(downPaymentAmount.toFixed(2))
-    };
-
-    // Validate results
-    for (const [key, value] of Object.entries(results)) {
-        if (isNaN(value)) {
-            throw new Error(`Invalid calculation result for ${key}`);
-        }
-    }
-
-    return results;
 }
 
 function displayResults(results) {
@@ -175,55 +129,55 @@ function displayResults(results) {
                 <tbody>
                     <tr>
                         <td>Monthly Mortgage Payment</td>
-                        <td class="text-end">$${results.monthlyMortgage.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyMortgage}</td>
                     </tr>
                     <tr>
                         <td>Monthly Property Tax</td>
-                        <td class="text-end">$${results.monthlyPropertyTax.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyPropertyTax}</td>
                     </tr>
                     <tr>
                         <td>Monthly Insurance</td>
-                        <td class="text-end">$${results.monthlyInsurance.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyInsurance}</td>
                     </tr>
                     <tr>
                         <td>Monthly Maintenance</td>
-                        <td class="text-end">$${results.monthlyMaintenance.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyMaintenance}</td>
                     </tr>
                     <tr>
                         <td>Monthly Vacancy Cost</td>
-                        <td class="text-end">$${results.monthlyVacancyCost.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyVacancyCost}</td>
                     </tr>
                     <tr>
                         <td>Monthly Turnover Cost</td>
-                        <td class="text-end">$${results.monthlyTurnoverCost.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyTurnoverCost}</td>
                     </tr>
                     <tr class="table-primary">
                         <td>Total Monthly Costs</td>
-                        <td class="text-end">$${results.totalMonthlyCosts.toFixed(2)}</td>
+                        <td class="text-end">$${results.totalMonthlyCosts}</td>
                     </tr>
                     <tr>
                         <td>Monthly Rental Income</td>
-                        <td class="text-end">$${results.monthlyRent.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyRent}</td>
                     </tr>
                     <tr class="${results.monthlyProfit >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Monthly Profit/Loss</td>
-                        <td class="text-end">$${results.monthlyProfit.toFixed(2)}</td>
+                        <td class="text-end">$${results.monthlyProfit}</td>
                     </tr>
                     <tr class="${results.annualProfit >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Annual Profit/Loss</td>
-                        <td class="text-end">$${results.annualProfit.toFixed(2)}</td>
+                        <td class="text-end">$${results.annualProfit}</td>
                     </tr>
                     <tr>
                         <td>Cash-on-Cash Return</td>
-                        <td class="text-end">${results.cashOnCashReturn.toFixed(2)}%</td>
+                        <td class="text-end">${results.cashOnCashReturn}%</td>
                     </tr>
                     <tr>
                         <td>Break-even Period</td>
-                        <td class="text-end">${results.breakEvenPeriod.toFixed(1)} months</td>
+                        <td class="text-end">${results.breakEvenPeriod} months</td>
                     </tr>
                     <tr>
                         <td>DSCR</td>
-                        <td class="text-end">${results.dscr.toFixed(2)}</td>
+                        <td class="text-end">${results.dscr}</td>
                     </tr>
                 </tbody>
             </table>
@@ -263,7 +217,7 @@ document.getElementById('downloadPDF').addEventListener('click', function() {
     // Add risk assessment
     const riskLevel = results.dscr >= 1.2 ? 'Low' : results.dscr >= 1.0 ? 'Moderate' : 'High';
     const riskY = doc.lastAutoTable.finalY + 10;
-    doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${results.dscr.toFixed(2)})`, 14, riskY);
+    doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${results.dscr})`, 14, riskY);
     
     // Add investment analysis
     const analysisY = riskY + 10;
@@ -300,7 +254,7 @@ document.getElementById('downloadExcel').addEventListener('click', function() {
         [''],
         ['Risk Assessment'],
         ['Risk Level', riskLevel],
-        ['DSCR', results.dscr.toFixed(2)]
+        ['DSCR', results.dscr]
     ], { origin: -1 });
     
     // Add investment analysis
@@ -322,20 +276,20 @@ function generateInvestmentAnalysis(results) {
     
     // Monthly cash flow analysis
     if (results.monthlyProfit >= 0) {
-        analysis += `The property generates a positive monthly cash flow of $${results.monthlyProfit.toFixed(2)}. `;
+        analysis += `The property generates a positive monthly cash flow of $${results.monthlyProfit}. `;
     } else {
-        analysis += `The property has a negative monthly cash flow of $${Math.abs(results.monthlyProfit).toFixed(2)}. `;
+        analysis += `The property has a negative monthly cash flow of $${Math.abs(results.monthlyProfit)}. `;
     }
     
     // Annual return analysis
-    analysis += `The annual profit/loss is $${results.annualProfit.toFixed(2)}. `;
+    analysis += `The annual profit/loss is $${results.annualProfit}. `;
     
     // Cash-on-cash return analysis
-    analysis += `The cash-on-cash return is ${results.cashOnCashReturn.toFixed(2)}%. `;
+    analysis += `The cash-on-cash return is ${results.cashOnCashReturn}%. `;
     
     // Break-even analysis
     if (results.breakEvenPeriod !== Infinity) {
-        analysis += `The property will break even in ${results.breakEvenPeriod.toFixed(1)} months. `;
+        analysis += `The property will break even in ${results.breakEvenPeriod} months. `;
     } else {
         analysis += 'The property will not break even at current rates. ';
     }
