@@ -12,6 +12,7 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
 // Show toast notification
 function showToast(message, type = 'success') {
@@ -22,6 +23,66 @@ function showToast(message, type = 'success') {
         toast.classList.remove('bg-success', 'bg-danger');
         toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
         new bootstrap.Toast(toast).show();
+    }
+}
+
+// Save analysis to Firestore
+async function saveAnalysis(analysisData) {
+    try {
+        if (!auth.currentUser) {
+            showToast('Please log in to save your analysis', 'danger');
+            return;
+        }
+
+        const analysis = {
+            ...analysisData,
+            userId: auth.currentUser.uid,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            propertyName: analysisData.propertyName || 'Unnamed Property'
+        };
+
+        await db.collection('analyses').add(analysis);
+        showToast('Analysis saved successfully!');
+    } catch (error) {
+        console.error('Error saving analysis:', error);
+        showToast('Error saving analysis. Please try again.', 'danger');
+    }
+}
+
+// Get user's saved analyses
+async function getSavedAnalyses() {
+    try {
+        if (!auth.currentUser) return [];
+
+        const snapshot = await db.collection('analyses')
+            .where('userId', '==', auth.currentUser.uid)
+            .orderBy('createdAt', 'desc')
+            .get();
+
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting analyses:', error);
+        showToast('Error loading analyses. Please try again.', 'danger');
+        return [];
+    }
+}
+
+// Delete analysis
+async function deleteAnalysis(analysisId) {
+    try {
+        if (!auth.currentUser) {
+            showToast('Please log in to delete analyses', 'danger');
+            return;
+        }
+
+        await db.collection('analyses').doc(analysisId).delete();
+        showToast('Analysis deleted successfully!');
+    } catch (error) {
+        console.error('Error deleting analysis:', error);
+        showToast('Error deleting analysis. Please try again.', 'danger');
     }
 }
 

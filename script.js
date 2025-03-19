@@ -229,6 +229,9 @@ function displayResults(results) {
             </table>
         </div>
     `;
+    
+    // Add save button after displaying results
+    addSaveButton();
 }
 
 // Download functionality
@@ -350,4 +353,44 @@ function generateInvestmentAnalysis(results) {
 }
 
 // Store results globally for download functions
-let results = null; 
+let results = null;
+
+// Add save button to results
+function addSaveButton() {
+    const resultsCard = document.getElementById('resultsCard');
+    if (resultsCard && !document.getElementById('saveAnalysisBtn')) {
+        const buttonGroup = resultsCard.querySelector('.btn-group');
+        if (buttonGroup) {
+            const saveButton = document.createElement('button');
+            saveButton.id = 'saveAnalysisBtn';
+            saveButton.className = 'btn btn-outline-primary btn-sm';
+            saveButton.innerHTML = '<i class="bi bi-save me-1"></i>Save Analysis';
+            saveButton.onclick = saveCurrentAnalysis;
+            buttonGroup.appendChild(saveButton);
+        }
+    }
+}
+
+// Save current analysis
+async function saveCurrentAnalysis() {
+    const propertyName = prompt('Enter a name for this property analysis:');
+    if (!propertyName) return;
+
+    const analysisData = {
+        propertyName,
+        propertyPrice: parseFloat(document.getElementById('propertyPrice').value),
+        downPayment: parseFloat(document.getElementById('downPayment').value),
+        interestRate: parseFloat(document.getElementById('interestRate').value),
+        loanTerm: parseInt(document.getElementById('loanTerm').value),
+        monthlyRent: parseFloat(document.getElementById('monthlyRent').value),
+        monthlyExpenses: parseFloat(document.getElementById('monthlyExpenses').value),
+        monthlyMortgage: parseFloat(document.getElementById('monthlyMortgage').textContent.replace(/[^0-9.-]+/g, '')),
+        monthlyProfit: parseFloat(document.getElementById('monthlyProfit').textContent.replace(/[^0-9.-]+/g, '')),
+        annualProfit: parseFloat(document.getElementById('annualProfit').textContent.replace(/[^0-9.-]+/g, '')),
+        cashOnCashReturn: parseFloat(document.getElementById('cashOnCashReturn').textContent.replace(/[^0-9.-]+/g, '')),
+        breakEvenPeriod: parseFloat(document.getElementById('breakEvenPeriod').textContent.replace(/[^0-9.-]+/g, '')),
+        dscr: parseFloat(document.getElementById('dscr').textContent.replace(/[^0-9.-]+/g, ''))
+    };
+
+    await saveAnalysis(analysisData);
+} 
