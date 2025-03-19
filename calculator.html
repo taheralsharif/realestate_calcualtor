@@ -31,6 +31,52 @@
             <button class="btn btn-outline-primary" id="themeToggle">
                 <i class="bi bi-sun-fill"></i>
             </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">
+                            <i class="bi bi-house-door me-1"></i>
+                            Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="calculator.html">
+                            <i class="bi bi-calculator me-1"></i>
+                            Calculator
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="comparison.html">
+                            <i class="bi bi-graph-up me-1"></i>
+                            Compare
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="guide.html">
+                            <i class="bi bi-book me-1"></i>
+                            Guide
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <div class="dropdown" id="userDropdown">
+                        <button class="btn btn-link nav-link dropdown-toggle d-none" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="" alt="Profile" class="rounded-circle me-2" id="userPhoto" style="width: 32px; height: 32px;">
+                            <span id="userName">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenuButton">
+                            <li><a class="dropdown-item" href="#" id="profileLink"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#" id="settingsLink"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" id="logoutLink"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    <a href="login.html" class="btn btn-outline-primary ms-2" id="loginButton">
+                        <i class="bi bi-box-arrow-in-right me-1"></i>
+                        Login
+                    </a>
+                </div>
+            </div>
         </div>
     </nav>
 
@@ -165,5 +211,45 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="script.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            const userDropdown = document.getElementById('userDropdown');
+            const loginButton = document.getElementById('loginButton');
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userPhoto = document.getElementById('userPhoto');
+            const userName = document.getElementById('userName');
+            
+            if (user) {
+                // User is signed in
+                userDropdown.classList.remove('d-none');
+                loginButton.classList.add('d-none');
+                
+                // Update user info
+                userPhoto.src = user.photoURL || 'https://via.placeholder.com/32';
+                userName.textContent = user.displayName || user.email;
+                
+                // Handle logout
+                document.getElementById('logoutLink').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    auth.signOut().then(() => {
+                        window.location.href = 'login.html';
+                    }).catch((error) => {
+                        console.error('Error signing out:', error);
+                    });
+                });
+            } else {
+                // User is signed out
+                userDropdown.classList.add('d-none');
+                loginButton.classList.remove('d-none');
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
 </body>
 </html> 
