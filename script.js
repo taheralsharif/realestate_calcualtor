@@ -1,13 +1,26 @@
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Calculator initialized');
     const calculatorForm = document.getElementById('calculatorForm');
     const resultsDiv = document.getElementById('results');
 
+    if (!calculatorForm) {
+        console.error('Calculator form not found!');
+        return;
+    }
+
     calculatorForm.addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form from submitting and refreshing the page
-        calculateInvestment();
+        e.preventDefault();
+        console.log('Form submitted');
+        try {
+            calculateInvestment();
+        } catch (error) {
+            console.error('Error calculating investment:', error);
+            alert('An error occurred while calculating. Please check the console for details.');
+        }
     });
 
     function calculateInvestment() {
+        console.log('Starting calculations');
         // Get form values
         const housePrice = parseFloat(document.getElementById('housePrice').value);
         const downPaymentPercent = parseFloat(document.getElementById('downPayment').value) / 100;
@@ -17,6 +30,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const annualPropertyTax = parseFloat(document.getElementById('propertyTax').value);
         const annualInsurance = parseFloat(document.getElementById('insurance').value);
         const monthlyMaintenance = parseFloat(document.getElementById('maintenance').value);
+
+        console.log('Input values:', {
+            housePrice,
+            downPaymentPercent,
+            interestRate,
+            loanTerm,
+            monthlyRent,
+            annualPropertyTax,
+            annualInsurance,
+            monthlyMaintenance
+        });
 
         // Calculate loan amount
         const loanAmount = housePrice * (1 - downPaymentPercent);
@@ -42,22 +66,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const annualProfitLoss = monthlyProfitLoss * 12;
         const roi = (annualProfitLoss / downPaymentAmount) * 100;
 
+        console.log('Calculated values:', {
+            monthlyMortgagePayment,
+            monthlyPropertyTax,
+            monthlyInsurance,
+            totalMonthlyCosts,
+            monthlyProfitLoss,
+            roi
+        });
+
         // Update results in the UI
-        document.getElementById('mortgagePayment').textContent = formatCurrency(monthlyMortgagePayment);
-        document.getElementById('monthlyPropertyTax').textContent = formatCurrency(monthlyPropertyTax);
-        document.getElementById('monthlyInsurance').textContent = formatCurrency(monthlyInsurance);
-        document.getElementById('monthlyMaintenance').textContent = formatCurrency(monthlyMaintenance);
-        document.getElementById('totalMonthlyCosts').textContent = formatCurrency(totalMonthlyCosts);
-        document.getElementById('monthlyRentalIncome').textContent = formatCurrency(monthlyRent);
-        document.getElementById('monthlyProfitLoss').textContent = formatCurrency(monthlyProfitLoss);
+        try {
+            document.getElementById('mortgagePayment').textContent = formatCurrency(monthlyMortgagePayment);
+            document.getElementById('monthlyPropertyTax').textContent = formatCurrency(monthlyPropertyTax);
+            document.getElementById('monthlyInsurance').textContent = formatCurrency(monthlyInsurance);
+            document.getElementById('monthlyMaintenance').textContent = formatCurrency(monthlyMaintenance);
+            document.getElementById('totalMonthlyCosts').textContent = formatCurrency(totalMonthlyCosts);
+            document.getElementById('monthlyRentalIncome').textContent = formatCurrency(monthlyRent);
+            document.getElementById('monthlyProfitLoss').textContent = formatCurrency(monthlyProfitLoss);
 
-        // Generate investment analysis
-        const analysis = generateInvestmentAnalysis(monthlyProfitLoss, roi);
-        document.getElementById('investmentAnalysis').textContent = analysis;
+            // Generate investment analysis
+            const analysis = generateInvestmentAnalysis(monthlyProfitLoss, roi);
+            document.getElementById('investmentAnalysis').textContent = analysis;
 
-        // Show results
-        resultsDiv.classList.remove('d-none');
-        resultsDiv.classList.add('show');
+            // Show results
+            resultsDiv.classList.remove('d-none');
+            resultsDiv.classList.add('show');
+            console.log('Results displayed successfully');
+        } catch (error) {
+            console.error('Error updating UI:', error);
+            throw error;
+        }
     }
 
     function formatCurrency(amount) {
