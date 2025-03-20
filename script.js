@@ -93,77 +93,59 @@ function calculateInvestment(data) {
     return window.currentResults;
 }
 
+// Function to display results
 function displayResults(results) {
-    const resultsDiv = document.getElementById('results');
-    if (!resultsDiv) return; // Exit if results div not found
-
-    // Store results globally
-    window.currentResults = results;
-
-    // Format numbers for display
-    const formatCurrency = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        }).format(value);
-    };
-
-    const formatPercent = (value) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 1,
-            maximumFractionDigits: 1
-        }).format(value / 100);
-    };
+    const resultsCard = document.getElementById('resultsCard');
+    if (!resultsCard) return;
 
     // Create results HTML
     const resultsHTML = `
-        <div class="card">
-            <div class="card-header">
-                <h5 class="card-title mb-0">Investment Analysis Results</h5>
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="bi bi-calculator me-2"></i>Investment Analysis Results
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="mb-3">Monthly Costs</h6>
+                    <p><strong>Mortgage Payment:</strong> $${results.monthlyMortgage.toFixed(2)}</p>
+                    <p><strong>Property Tax:</strong> $${results.monthlyPropertyTax.toFixed(2)}</p>
+                    <p><strong>Insurance:</strong> $${results.monthlyInsurance.toFixed(2)}</p>
+                    <p><strong>Maintenance:</strong> $${results.monthlyMaintenance.toFixed(2)}</p>
+                    <p><strong>Total Monthly Costs:</strong> $${results.totalMonthlyCosts.toFixed(2)}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="mb-3">Investment Metrics</h6>
+                    <p><strong>Monthly Profit/Loss:</strong> <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">$${results.monthlyProfitLoss.toFixed(2)}</span></p>
+                    <p><strong>Annual Profit/Loss:</strong> <span class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">$${results.annualProfitLoss.toFixed(2)}</span></p>
+                    <p><strong>Cash-on-Cash Return:</strong> <span class="${results.cashOnCashReturn >= 0 ? 'text-success' : 'text-danger'}">${results.cashOnCashReturn.toFixed(2)}%</span></p>
+                    <p><strong>DSCR:</strong> <span class="${results.dscr >= 1.2 ? 'text-success' : 'text-danger'}">${results.dscr.toFixed(2)}</span></p>
+                    <p><strong>Break-even Period:</strong> ${results.breakEvenPeriod.toFixed(1)} years</p>
+                </div>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="mb-3">Monthly Analysis</h6>
-                        <p><strong>Monthly Mortgage Payment:</strong> ${formatCurrency(results.monthlyMortgage)}</p>
-                        <p><strong>Total Monthly Costs:</strong> ${formatCurrency(results.totalMonthlyCosts)}</p>
-                        <p><strong>Monthly Profit/Loss:</strong> 
-                            <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatCurrency(results.monthlyProfitLoss)}
-                            </span>
-                        </p>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="mb-3">Annual Analysis</h6>
-                        <p><strong>Annual Profit/Loss:</strong> 
-                            <span class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatCurrency(results.annualProfitLoss)}
-                            </span>
-                        </p>
-                        <p><strong>Cash-on-Cash Return:</strong> ${formatPercent(results.cashOnCashReturn)}</p>
-                        <p><strong>DSCR:</strong> ${results.dscr.toFixed(2)}</p>
-                        <p><strong>Break-even Period:</strong> ${results.breakEvenPeriod.toFixed(1)} years</p>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <h6 class="mb-2">Investment Verdict</h6>
-                    <p class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
-                        ${results.annualProfitLoss >= 0 ? 'Good Investment' : 'Poor Investment'}
-                    </p>
-                </div>
+            <div class="mt-3">
+                <h6>Investment Verdict</h6>
+                <p class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                    <i class="bi ${results.monthlyProfitLoss >= 0 ? 'bi-check-circle' : 'bi-x-circle'} me-2"></i>
+                    ${results.monthlyProfitLoss >= 0 ? 'Good Investment' : 'Poor Investment'}
+                </p>
             </div>
         </div>
     `;
 
-    // Update results div
-    resultsDiv.innerHTML = resultsHTML;
-    resultsDiv.classList.remove('d-none');
+    // Update results card
+    resultsCard.innerHTML = resultsHTML;
+    resultsCard.classList.remove('d-none');
 
-    // Add save button
-    addSaveButton();
+    // Add save button if not already present
+    if (!resultsCard.querySelector('.save-button')) {
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-primary save-button';
+        saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
+        saveButton.onclick = saveCurrentAnalysis;
+        resultsCard.querySelector('.card-body').appendChild(saveButton);
+    }
 }
 
 // Download functionality

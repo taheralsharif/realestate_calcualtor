@@ -60,21 +60,24 @@ exports.getAIAnalysis = functions.https.onRequest((request, response) => {
                 return;
             }
 
-            const prompt = `Analyze this real estate investment opportunity:
-                Property Price: $${propertyData.price}
-                Estimated Monthly Rent: $${estimatedRent}
-                Property Type: ${propertyData.propertyType}
-                Bedrooms: ${propertyData.beds}
-                Bathrooms: ${propertyData.baths}
-                Square Footage: ${propertyData.sqft}
-                Year Built: ${propertyData.yearBuilt}
-                Address: ${propertyData.address}
+            const prompt = `Analyze this real estate investment:
 
-                Please provide a detailed analysis including:
-                1. Market Analysis
-                2. Investment Potential
-                3. Risk Assessment
-                4. Recommendations`;
+Property Details:
+- Price: $${propertyData.price.toLocaleString()}
+- Monthly Rent: $${estimatedRent.toLocaleString()}
+- Type: ${propertyData.propertyType}
+- Size: ${propertyData.beds} beds, ${propertyData.baths} baths, ${propertyData.sqft.toLocaleString()} sqft
+- Built: ${propertyData.yearBuilt}
+- Location: ${propertyData.address}
+
+Provide a clear, concise analysis with:
+1. Investment Verdict: GOOD, MODERATE, or POOR
+2. Key Strengths (2-3 points)
+3. Main Risks (2-3 points)
+4. Market Outlook (1-2 sentences)
+5. Recommendations (2-3 actionable points)
+
+Format the response in a clear, easy-to-read structure with bullet points.`;
 
             const completion = await groq.chat.completions.create({
                 messages: [
