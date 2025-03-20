@@ -28,28 +28,24 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
     try {
         // Get form data
         const formData = new FormData(this);
-        const data = {};
+        const data = {
+            propertyPrice: parseFloat(formData.get('propertyPrice')),
+            downPayment: parseFloat(formData.get('downPayment')),
+            interestRate: parseFloat(formData.get('interestRate')),
+            loanTerm: parseInt(formData.get('loanTerm')),
+            monthlyRent: parseFloat(formData.get('monthlyRent')),
+            monthlyExpenses: parseFloat(formData.get('monthlyExpenses'))
+        };
         
-        // List of required fields
-        const requiredFields = ['housePrice', 'downPayment', 'interestRate', 'loanTerm', 'monthlyRent', 
-                              'propertyTax', 'insurance', 'maintenance', 'vacancyRate', 'turnoverCost'];
-        
-        for (const field of requiredFields) {
-            const value = formData.get(field);
-            if (value === null || value === '') {
-                throw new Error(`Missing required field: ${field}`);
+        // Validate inputs
+        for (const [key, value] of Object.entries(data)) {
+            if (isNaN(value)) {
+                throw new Error(`Please enter a valid number for ${key}`);
             }
-            
-            const numValue = parseFloat(value);
-            if (isNaN(numValue)) {
-                throw new Error(`Invalid number value for ${field}`);
-            }
-            
-            data[field] = numValue;
         }
         
         // Calculate investment
-        results = calculateInvestment(data);
+        const results = calculateInvestment(data);
         
         // Display results
         displayResults(results);
@@ -59,7 +55,7 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
         
     } catch (error) {
         console.error('Error calculating investment:', error);
-        alert('An error occurred while calculating the investment. Please check your input values and try again.');
+        showToast(error.message, 'danger');
     }
 });
 
@@ -67,18 +63,12 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
 function calculateInvestment(data) {
     try {
         // Convert string inputs to numbers
-        const propertyPrice = parseFloat(data.propertyPrice);
-        const downPayment = parseFloat(data.downPayment);
-        const interestRate = parseFloat(data.interestRate) / 100;
-        const loanTerm = parseInt(data.loanTerm);
-        const monthlyRent = parseFloat(data.monthlyRent);
-        const monthlyExpenses = parseFloat(data.monthlyExpenses);
-
-        // Validate inputs
-        if (isNaN(propertyPrice) || isNaN(downPayment) || isNaN(interestRate) || 
-            isNaN(loanTerm) || isNaN(monthlyRent) || isNaN(monthlyExpenses)) {
-            throw new Error('Please enter valid numbers for all fields');
-        }
+        const propertyPrice = data.propertyPrice;
+        const downPayment = data.downPayment;
+        const interestRate = data.interestRate / 100;
+        const loanTerm = data.loanTerm;
+        const monthlyRent = data.monthlyRent;
+        const monthlyExpenses = data.monthlyExpenses;
 
         // Calculate monthly mortgage payment
         const loanAmount = propertyPrice - downPayment;
@@ -113,7 +103,8 @@ function calculateInvestment(data) {
             annualProfit: annualProfit.toFixed(2),
             cashOnCashReturn: cashOnCashReturn.toFixed(2),
             breakEvenPeriod: breakEvenPeriod.toFixed(1),
-            dscr: dscr.toFixed(2)
+            dscr: dscr.toFixed(2),
+            monthlyRent: monthlyRent.toFixed(2)
         };
     } catch (error) {
         console.error('Calculation error:', error);
@@ -132,24 +123,8 @@ function displayResults(results) {
                         <td class="text-end">$${results.monthlyMortgage}</td>
                     </tr>
                     <tr>
-                        <td>Monthly Property Tax</td>
-                        <td class="text-end">$${results.monthlyPropertyTax}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Insurance</td>
-                        <td class="text-end">$${results.monthlyInsurance}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Maintenance</td>
-                        <td class="text-end">$${results.monthlyMaintenance}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Vacancy Cost</td>
-                        <td class="text-end">$${results.monthlyVacancyCost}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Turnover Cost</td>
-                        <td class="text-end">$${results.monthlyTurnoverCost}</td>
+                        <td>Monthly Expenses</td>
+                        <td class="text-end">$${results.monthlyExpenses}</td>
                     </tr>
                     <tr class="table-primary">
                         <td>Total Monthly Costs</td>
@@ -159,11 +134,11 @@ function displayResults(results) {
                         <td>Monthly Rental Income</td>
                         <td class="text-end">$${results.monthlyRent}</td>
                     </tr>
-                    <tr class="${results.monthlyProfit >= 0 ? 'table-success' : 'table-danger'}">
+                    <tr class="${parseFloat(results.monthlyProfit) >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Monthly Profit/Loss</td>
                         <td class="text-end">$${results.monthlyProfit}</td>
                     </tr>
-                    <tr class="${results.annualProfit >= 0 ? 'table-success' : 'table-danger'}">
+                    <tr class="${parseFloat(results.annualProfit) >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Annual Profit/Loss</td>
                         <td class="text-end">$${results.annualProfit}</td>
                     </tr>
@@ -312,39 +287,38 @@ let results = null;
 // Add save button to results
 function addSaveButton() {
     const resultsCard = document.getElementById('resultsCard');
-    if (resultsCard && !document.getElementById('saveAnalysisBtn')) {
-        const buttonGroup = resultsCard.querySelector('.btn-group');
-        if (buttonGroup) {
-            const saveButton = document.createElement('button');
-            saveButton.id = 'saveAnalysisBtn';
-            saveButton.className = 'btn btn-outline-primary btn-sm';
-            saveButton.innerHTML = '<i class="bi bi-save me-1"></i>Save Analysis';
-            saveButton.onclick = saveCurrentAnalysis;
-            buttonGroup.appendChild(saveButton);
-        }
+    const existingSaveBtn = document.getElementById('saveAnalysisBtn');
+    
+    if (!existingSaveBtn) {
+        const saveBtn = document.createElement('button');
+        saveBtn.id = 'saveAnalysisBtn';
+        saveBtn.className = 'btn btn-success mt-3';
+        saveBtn.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
+        saveBtn.onclick = saveCurrentAnalysis;
+        resultsCard.appendChild(saveBtn);
     }
 }
 
 // Save current analysis
 async function saveCurrentAnalysis() {
-    const propertyName = prompt('Enter a name for this property analysis:');
-    if (!propertyName) return;
+    try {
+        const results = {
+            propertyName: 'Investment Property',
+            monthlyMortgage: parseFloat(document.querySelector('#results tr:nth-child(1) td:last-child').textContent.replace('$', '')),
+            monthlyExpenses: parseFloat(document.querySelector('#results tr:nth-child(2) td:last-child').textContent.replace('$', '')),
+            totalMonthlyCosts: parseFloat(document.querySelector('#results tr:nth-child(3) td:last-child').textContent.replace('$', '')),
+            monthlyRent: parseFloat(document.querySelector('#results tr:nth-child(4) td:last-child').textContent.replace('$', '')),
+            monthlyProfit: parseFloat(document.querySelector('#results tr:nth-child(5) td:last-child').textContent.replace('$', '')),
+            annualProfit: parseFloat(document.querySelector('#results tr:nth-child(6) td:last-child').textContent.replace('$', '')),
+            cashOnCashReturn: parseFloat(document.querySelector('#results tr:nth-child(7) td:last-child').textContent.replace('%', '')),
+            breakEvenPeriod: parseFloat(document.querySelector('#results tr:nth-child(8) td:last-child').textContent),
+            dscr: parseFloat(document.querySelector('#results tr:nth-child(9) td:last-child').textContent)
+        };
 
-    const analysisData = {
-        propertyName,
-        propertyPrice: parseFloat(document.getElementById('propertyPrice').value),
-        downPayment: parseFloat(document.getElementById('downPayment').value),
-        interestRate: parseFloat(document.getElementById('interestRate').value),
-        loanTerm: parseInt(document.getElementById('loanTerm').value),
-        monthlyRent: parseFloat(document.getElementById('monthlyRent').value),
-        monthlyExpenses: parseFloat(document.getElementById('monthlyExpenses').value),
-        monthlyMortgage: parseFloat(document.getElementById('monthlyMortgage').textContent.replace(/[^0-9.-]+/g, '')),
-        monthlyProfit: parseFloat(document.getElementById('monthlyProfit').textContent.replace(/[^0-9.-]+/g, '')),
-        annualProfit: parseFloat(document.getElementById('annualProfit').textContent.replace(/[^0-9.-]+/g, '')),
-        cashOnCashReturn: parseFloat(document.getElementById('cashOnCashReturn').textContent.replace(/[^0-9.-]+/g, '')),
-        breakEvenPeriod: parseFloat(document.getElementById('breakEvenPeriod').textContent.replace(/[^0-9.-]+/g, '')),
-        dscr: parseFloat(document.getElementById('dscr').textContent.replace(/[^0-9.-]+/g, ''))
-    };
-
-    await saveAnalysis(analysisData);
+        await saveAnalysis(results);
+        showToast('Analysis saved successfully!');
+    } catch (error) {
+        console.error('Error saving analysis:', error);
+        showToast('Error saving analysis. Please try again.', 'danger');
+    }
 } 

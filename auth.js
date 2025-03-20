@@ -48,13 +48,17 @@ auth.onAuthStateChanged((user) => {
         if (userDropdown) userDropdown.classList.remove('d-none');
         if (loginButton) loginButton.classList.add('d-none');
         if (createAccountBtn) createAccountBtn.classList.add('d-none');
-        if (userName) userName.textContent = user.displayName || user.email;
+        
+        // Update user name in all locations
+        const displayName = user.displayName || user.email;
+        if (userName) userName.textContent = displayName;
         if (userMenuButton) {
             userMenuButton.innerHTML = `
                 <i class="bi bi-person-circle me-2"></i>
-                <span>${user.displayName || user.email}</span>
+                <span>${displayName}</span>
             `;
         }
+
         if (logoutLink) {
             logoutLink.addEventListener('click', (e) => {
                 e.preventDefault();
