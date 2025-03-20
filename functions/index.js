@@ -1,8 +1,9 @@
 const functions = require('firebase-functions');
 const cors = require('cors')({ 
-    origin: ['https://taheralsharif.github.io', 'http://localhost:5000'],
+    origin: true, // Allow all origins for now
     methods: ['POST', 'OPTIONS'],
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
 });
 const { Groq } = require('groq-sdk');
 const admin = require('firebase-admin');
@@ -16,13 +17,18 @@ const groq = new Groq({
 });
 
 exports.getAIAnalysis = functions.https.onRequest((request, response) => {
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+        response.set('Access-Control-Allow-Origin', '*');
+        response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        response.set('Access-Control-Max-Age', '3600');
+        response.status(204).send('');
+        return;
+    }
+
     return cors(request, response, async () => {
         try {
-            if (request.method === 'OPTIONS') {
-                response.status(204).send('');
-                return;
-            }
-
             if (request.method !== 'POST') {
                 response.status(405).send('Method Not Allowed');
                 return;
@@ -85,6 +91,8 @@ exports.getAIAnalysis = functions.https.onRequest((request, response) => {
 
             const analysis = completion.choices[0]?.message?.content || 'No analysis available';
 
+            // Set CORS headers for the response
+            response.set('Access-Control-Allow-Origin', '*');
             response.status(200).json({ analysis });
         } catch (error) {
             console.error('Error in getAIAnalysis:', error);
