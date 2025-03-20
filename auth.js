@@ -6,13 +6,14 @@ const firebaseConfig = {
     storageBucket: "real-estate-calculator-3212e.firebasestorage.app",
     messagingSenderId: "683636020205",
     appId: "1:683636020205:web:0c237b8b5a823d11604de4",
-    measurementId: "G-2QVFVLJ4GY"
+    measurementId: "G-2QVFVLJ4GY",
+    databaseURL: "https://real-estate-calculator-3212e-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
 let firebaseApp;
 let auth;
-let db;
+let database;
 
 try {
     if (!firebase.apps.length) {
@@ -21,11 +22,12 @@ try {
         firebaseApp = firebase.app();
     }
 
-    // Initialize Firestore
-    db = firebase.firestore();
+    // Initialize Realtime Database
+    database = firebase.database();
 
     // Initialize Auth
     auth = firebase.auth();
+
 } catch (error) {
     console.error('Firebase initialization error:', error);
 }
@@ -83,10 +85,10 @@ function updateUserProfile(user) {
     }
 }
 
-// Save analysis to Firestore
+// Save analysis to Realtime Database
 async function saveAnalysis(analysisData) {
     try {
-        if (!auth || !db) {
+        if (!auth || !database) {
             throw new Error('Firebase not initialized');
         }
 
@@ -95,12 +97,11 @@ async function saveAnalysis(analysisData) {
             throw new Error('User must be logged in to save analyses');
         }
 
-        const analysisRef = db.collection('analyses').doc();
+        const analysisRef = database.ref(`analyses/${user.uid}`).push();
         await analysisRef.set({
             ...analysisData,
-            userId: user.uid,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: firebase.database.ServerValue.TIMESTAMP,
+            updatedAt: firebase.database.ServerValue.TIMESTAMP
         });
 
         showToast('Analysis saved successfully!');
@@ -114,7 +115,7 @@ async function saveAnalysis(analysisData) {
 // Get saved analyses for current user
 async function getSavedAnalyses() {
     try {
-        if (!auth || !db) {
+        if (!auth || !database) {
             throw new Error('Firebase not initialized');
         }
 
@@ -123,15 +124,17 @@ async function getSavedAnalyses() {
             throw new Error('User must be logged in to view analyses');
         }
 
-        const snapshot = await db.collection('analyses')
-            .where('userId', '==', user.uid)
-            .orderBy('createdAt', 'desc')
-            .get();
+        const snapshot = await database.ref(`analyses/${user.uid}`).once('value');
+        const analyses = [];
+        
+        snapshot.forEach((childSnapshot) => {
+            analyses.push({
+                id: childSnapshot.key,
+                ...childSnapshot.val()
+            });
+        });
 
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        return analyses.sort((a, b) => b.createdAt - a.createdAt);
     } catch (error) {
         console.error('Error getting analyses:', error);
         showToast('Error loading analyses. Please try again.', 'danger');
@@ -142,7 +145,7 @@ async function getSavedAnalyses() {
 // Delete analysis
 async function deleteAnalysis(analysisId) {
     try {
-        if (!auth || !db) {
+        if (!auth || !database) {
             throw new Error('Firebase not initialized');
         }
 
@@ -151,7 +154,7 @@ async function deleteAnalysis(analysisId) {
             throw new Error('User must be logged in to delete analyses');
         }
 
-        await db.collection('analyses').doc(analysisId).delete();
+        await database.ref(`analyses/${user.uid}/${analysisId}`).remove();
         showToast('Analysis deleted successfully!');
     } catch (error) {
         console.error('Error deleting analysis:', error);
