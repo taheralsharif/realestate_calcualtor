@@ -34,36 +34,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Check authentication state
-auth.onAuthStateChanged((user) => {
+// Update user profile display
+function updateUserProfile(user) {
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
-    const createAccountBtn = document.getElementById('createAccountBtn');
-    const userName = document.getElementById('userName');
     const userMenuButton = document.getElementById('userMenuButton');
-    const logoutLink = document.getElementById('logoutLink');
-
+    const userName = document.getElementById('userName');
+    const calculatorContent = document.getElementById('calculatorContent');
+    
     if (user) {
         // User is signed in
-        if (userDropdown) userDropdown.classList.remove('d-none');
-        if (loginButton) loginButton.classList.add('d-none');
-        if (createAccountBtn) createAccountBtn.classList.add('d-none');
+        userDropdown.classList.remove('d-none');
+        loginButton.classList.add('d-none');
+        if (calculatorContent) calculatorContent.classList.remove('d-none');
         
-        // Update user name in all locations
-        const displayName = user.displayName || user.email;
-        if (userName) userName.textContent = displayName;
-        if (userMenuButton) {
-            userMenuButton.innerHTML = `
-                <i class="bi bi-person-circle me-2"></i>
-                <span>${displayName}</span>
-            `;
-        }
-
+        // Update user info
+        userName.textContent = user.displayName || user.email;
+        
+        // Handle logout
+        const logoutLink = document.getElementById('logoutLink');
         if (logoutLink) {
             logoutLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 auth.signOut().then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                 }).catch((error) => {
                     console.error('Error signing out:', error);
                 });
@@ -71,48 +65,44 @@ auth.onAuthStateChanged((user) => {
         }
     } else {
         // User is signed out
-        if (userDropdown) userDropdown.classList.add('d-none');
-        if (loginButton) loginButton.classList.remove('d-none');
-        if (createAccountBtn) createAccountBtn.classList.remove('d-none');
-        if (userName) userName.textContent = 'User';
-        if (userMenuButton) {
-            userMenuButton.innerHTML = `
-                <i class="bi bi-person-circle me-2"></i>
-                <span>User</span>
-            `;
-        }
+        userDropdown.classList.add('d-none');
+        loginButton.classList.remove('d-none');
+        if (calculatorContent) calculatorContent.classList.add('d-none');
+        userName.textContent = 'User';
+        window.location.href = 'login.html';
     }
-});
+}
 
 // Save analysis to Firestore
 async function saveAnalysis(analysisData) {
     try {
         const user = auth.currentUser;
         if (!user) {
-            throw new Error('User not authenticated');
+            throw new Error('User must be logged in to save analyses');
         }
 
-        const analysis = {
+        const analysisRef = db.collection('analyses').doc();
+        await analysisRef.set({
             ...analysisData,
             userId: user.uid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+        });
 
-        const docRef = await db.collection('analyses').add(analysis);
-        return docRef.id;
+        showToast('Analysis saved successfully!');
     } catch (error) {
         console.error('Error saving analysis:', error);
+        showToast('Error saving analysis. Please try again.', 'danger');
         throw error;
     }
 }
 
-// Get saved analyses from Firestore
+// Get saved analyses for current user
 async function getSavedAnalyses() {
     try {
         const user = auth.currentUser;
         if (!user) {
-            throw new Error('User not authenticated');
+            throw new Error('User must be logged in to view analyses');
         }
 
         const snapshot = await db.collection('analyses')
@@ -126,24 +116,32 @@ async function getSavedAnalyses() {
         }));
     } catch (error) {
         console.error('Error getting analyses:', error);
+        showToast('Error loading analyses. Please try again.', 'danger');
         throw error;
     }
 }
 
-// Delete analysis from Firestore
+// Delete analysis
 async function deleteAnalysis(analysisId) {
     try {
         const user = auth.currentUser;
         if (!user) {
-            throw new Error('User not authenticated');
+            throw new Error('User must be logged in to delete analyses');
         }
 
         await db.collection('analyses').doc(analysisId).delete();
+        showToast('Analysis deleted successfully!');
     } catch (error) {
         console.error('Error deleting analysis:', error);
+        showToast('Error deleting analysis. Please try again.', 'danger');
         throw error;
     }
 }
+
+// Initialize Firebase Auth state listener
+auth.onAuthStateChanged((user) => {
+    updateUserProfile(user);
+});
 
 // Show toast notification
 function showToast(message, type = 'success') {
