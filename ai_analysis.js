@@ -18,8 +18,10 @@ async function getAIAnalysis(propertyData, estimatedRent) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`
+                'Authorization': `Bearer ${idToken}`,
+                'Accept': 'application/json'
             },
+            mode: 'cors',
             body: JSON.stringify({
                 propertyData,
                 estimatedRent
@@ -27,14 +29,18 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to get AI analysis');
+            const errorText = await response.text();
+            throw new Error(`Failed to get AI analysis: ${errorText}`);
         }
 
         const data = await response.json();
+        if (!data.analysis) {
+            throw new Error('No analysis data received');
+        }
         return data.analysis;
     } catch (error) {
         console.error('Error getting AI analysis:', error);
-        throw error;
+        throw new Error('Failed to get AI analysis. Please try again later.');
     }
 }
 
