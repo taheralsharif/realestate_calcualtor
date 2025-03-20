@@ -96,56 +96,171 @@ function calculateInvestment(data) {
 // Function to display results
 function displayResults(results) {
     const resultsCard = document.getElementById('resultsCard');
-    if (!resultsCard) return;
+    if (!resultsCard) {
+        console.error('Results card element not found');
+        return;
+    }
+
+    // Format numbers with commas and 2 decimal places
+    const formatNumber = (num) => {
+        return typeof num === 'number' ? num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    };
+
+    // Format currency with $ symbol
+    const formatCurrency = (num) => {
+        return typeof num === 'number' ? `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00';
+    };
+
+    // Format percentage with % symbol
+    const formatPercentage = (num) => {
+        return typeof num === 'number' ? `${(num * 100).toFixed(2)}%` : '0.00%';
+    };
 
     // Create results HTML
     const resultsHTML = `
-        <div class="card-header">
-            <h5 class="card-title mb-0">
-                <i class="bi bi-calculator me-2"></i>Investment Analysis Results
-            </h5>
-        </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="mb-3">Monthly Costs</h6>
-                    <p><strong>Mortgage Payment:</strong> $${results.monthlyMortgage.toFixed(2)}</p>
-                    <p><strong>Property Tax:</strong> $${results.monthlyPropertyTax.toFixed(2)}</p>
-                    <p><strong>Insurance:</strong> $${results.monthlyInsurance.toFixed(2)}</p>
-                    <p><strong>Maintenance:</strong> $${results.monthlyMaintenance.toFixed(2)}</p>
-                    <p><strong>Total Monthly Costs:</strong> $${results.totalMonthlyCosts.toFixed(2)}</p>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="mb-3">Investment Metrics</h6>
-                    <p><strong>Monthly Profit/Loss:</strong> <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">$${results.monthlyProfitLoss.toFixed(2)}</span></p>
-                    <p><strong>Annual Profit/Loss:</strong> <span class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">$${results.annualProfitLoss.toFixed(2)}</span></p>
-                    <p><strong>Cash-on-Cash Return:</strong> <span class="${results.cashOnCashReturn >= 0 ? 'text-success' : 'text-danger'}">${results.cashOnCashReturn.toFixed(2)}%</span></p>
-                    <p><strong>DSCR:</strong> <span class="${results.dscr >= 1.2 ? 'text-success' : 'text-danger'}">${results.dscr.toFixed(2)}</span></p>
-                    <p><strong>Break-even Period:</strong> ${results.breakEvenPeriod.toFixed(1)} years</p>
+            <h5 class="card-title mb-4">Investment Analysis Results</h5>
+            
+            <!-- Monthly Costs -->
+            <div class="mb-4">
+                <h6 class="text-primary">Monthly Costs</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Mortgage Payment:</span>
+                            <span>${formatCurrency(results.monthlyMortgage)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Property Tax:</span>
+                            <span>${formatCurrency(results.monthlyPropertyTax)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Insurance:</span>
+                            <span>${formatCurrency(results.monthlyInsurance)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>HOA:</span>
+                            <span>${formatCurrency(results.monthlyHOA)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Maintenance:</span>
+                            <span>${formatCurrency(results.monthlyMaintenance)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Vacancy:</span>
+                            <span>${formatCurrency(results.monthlyVacancy)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Management:</span>
+                            <span>${formatCurrency(results.monthlyManagement)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Other Expenses:</span>
+                            <span>${formatCurrency(results.monthlyOtherExpenses)}</span>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total Monthly Costs:</span>
+                            <span>${formatCurrency(results.totalMonthlyCosts)}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="mt-3">
-                <h6>Investment Verdict</h6>
-                <p class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+
+            <!-- Investment Metrics -->
+            <div class="mb-4">
+                <h6 class="text-primary">Investment Metrics</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Monthly Income:</span>
+                            <span>${formatCurrency(results.monthlyIncome)}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Monthly Profit/Loss:</span>
+                            <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatCurrency(results.monthlyProfitLoss)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Cash on Cash Return:</span>
+                            <span class="${results.cashOnCashReturn >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatPercentage(results.cashOnCashReturn)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Cap Rate:</span>
+                            <span class="${results.capRate >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatPercentage(results.capRate)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>ROI:</span>
+                            <span class="${results.roi >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatPercentage(results.roi)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between">
+                            <span>Break Even Ratio:</span>
+                            <span class="${results.breakEvenRatio <= 1 ? 'text-success' : 'text-danger'}">
+                                ${formatNumber(results.breakEvenRatio)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Investment Verdict -->
+            <div class="alert ${results.monthlyProfitLoss >= 0 ? 'alert-success' : 'alert-danger'} mb-0">
+                <h6 class="mb-0">
                     <i class="bi ${results.monthlyProfitLoss >= 0 ? 'bi-check-circle' : 'bi-x-circle'} me-2"></i>
                     ${results.monthlyProfitLoss >= 0 ? 'Good Investment' : 'Poor Investment'}
-                </p>
+                </h6>
             </div>
         </div>
     `;
 
-    // Update results card
+    // Update results card content
     resultsCard.innerHTML = resultsHTML;
-    resultsCard.classList.remove('d-none');
 
-    // Add save button if not already present
-    if (!resultsCard.querySelector('.save-button')) {
+    // Add save button if it doesn't exist
+    if (!document.getElementById('saveAnalysisBtn')) {
         const saveButton = document.createElement('button');
-        saveButton.className = 'btn btn-primary save-button';
+        saveButton.id = 'saveAnalysisBtn';
+        saveButton.className = 'btn btn-primary mt-3';
         saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
         saveButton.onclick = saveCurrentAnalysis;
-        resultsCard.querySelector('.card-body').appendChild(saveButton);
+        resultsCard.appendChild(saveButton);
     }
+
+    // Show results card
+    resultsCard.classList.remove('d-none');
 }
 
 // Download functionality

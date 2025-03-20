@@ -102,6 +102,64 @@
                     </div>
                 </div>
 
+                <!-- Property Details -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-house-door me-2"></i>Property Details
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="address" class="form-label">Property Address</label>
+                                <input type="text" class="form-control" id="address" name="address" required>
+                                <div id="addressAutocomplete" class="dropdown-menu w-100"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="propertyPrice" class="form-label">Property Price</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="propertyPrice" name="propertyPrice" required min="0" step="1000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="propertyType" class="form-label">Property Type</label>
+                                <select class="form-select" id="propertyType" name="propertyType" required>
+                                    <option value="">Select Type</option>
+                                    <option value="Single Family">Single Family</option>
+                                    <option value="Multi Family">Multi Family</option>
+                                    <option value="Condo">Condo</option>
+                                    <option value="Townhouse">Townhouse</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="beds" class="form-label">Bedrooms</label>
+                                <input type="number" class="form-control" id="beds" name="beds" required min="0" step="0.5">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="baths" class="form-label">Bathrooms</label>
+                                <input type="number" class="form-control" id="baths" name="baths" required min="0" step="0.5">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="sqft" class="form-label">Square Feet</label>
+                                <input type="number" class="form-control" id="sqft" name="sqft" required min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="yearBuilt" class="form-label">Year Built</label>
+                                <input type="number" class="form-control" id="yearBuilt" name="yearBuilt" required min="1800" max="2024">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="estimatedRent" class="form-label">Estimated Monthly Rent</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="estimatedRent" name="estimatedRent" required min="0" step="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Calculator Form -->
                 <div class="card mb-4">
                     <div class="card-body">
@@ -112,22 +170,15 @@
                                     <input type="text" class="form-control" id="propertyName" name="propertyName" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="propertyPrice" class="form-label">Property Price</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="propertyPrice" name="propertyPrice" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
                                     <label for="downPayment" class="form-label">Down Payment</label>
                                     <div class="input-group">
                                         <input type="number" class="form-control" id="downPayment" name="downPayment" value="20" required>
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="interestRate" class="form-label">Interest Rate</label>
                                     <div class="input-group">
@@ -135,9 +186,6 @@
                                         <span class="input-group-text">%</span>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="loanTerm" class="form-label">Loan Term</label>
                                     <div class="input-group">
@@ -145,22 +193,14 @@
                                         <span class="input-group-text">years</span>
                                     </div>
                                 </div>
+                            </div>
+
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="monthlyExpenses" class="form-label">Monthly Expenses</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
                                         <input type="number" class="form-control" id="monthlyExpenses" name="monthlyExpenses" value="0" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Estimated Rent Section -->
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="estimatedRent" class="form-label">Estimated Monthly Rent</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="estimatedRent" name="estimatedRent" required min="0" step="100">
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3 d-flex align-items-end">
@@ -275,6 +315,7 @@
     <script src="auth.js"></script>
     <script src="ai_analysis.js"></script>
     <script src="script.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"></script>
     <script>
         // Wait for Firebase to initialize before setting up auth state listener
         document.addEventListener('DOMContentLoaded', async () => {
@@ -460,6 +501,53 @@
                 showToast('Error saving AI analysis', 'danger');
             }
         }
+
+        // Initialize Google Places Autocomplete
+        function initGooglePlaces() {
+            const addressInput = document.getElementById('address');
+            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+                types: ['address'],
+                componentRestrictions: { country: 'us' }
+            });
+
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                if (place.geometry) {
+                    // Update form fields with place details
+                    document.getElementById('propertyPrice').value = '';
+                    document.getElementById('propertyType').value = '';
+                    document.getElementById('beds').value = '';
+                    document.getElementById('baths').value = '';
+                    document.getElementById('sqft').value = '';
+                    document.getElementById('yearBuilt').value = '';
+                    document.getElementById('estimatedRent').value = '';
+
+                    // Get additional property details using Places API
+                    const service = new google.maps.places.PlacesService(document.createElement('div'));
+                    service.getDetails({
+                        placeId: place.place_id,
+                        fields: ['price_level', 'rating', 'reviews', 'formatted_address']
+                    }, (result, status) => {
+                        if (status === google.maps.places.PlacesServiceStatus.OK) {
+                            // Update form with available data
+                            if (result.price_level) {
+                                // Convert price level (0-4) to estimated price range
+                                const priceRanges = [0, 50000, 100000, 250000, 500000];
+                                document.getElementById('propertyPrice').value = priceRanges[result.price_level];
+                            }
+                            
+                            // Show success message
+                            showToast('Property details loaded from Google Places!', 'success');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Initialize when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initGooglePlaces();
+        });
     </script>
 </body>
 </html> 

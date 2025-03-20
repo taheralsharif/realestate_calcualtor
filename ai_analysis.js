@@ -2,45 +2,37 @@
 const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Function to get AI analysis
+// Function to get AI analysis using Firebase Cloud Functions
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
-        // Get the current user's ID token
-        const user = firebase.auth().currentUser;
-        if (!user) {
-            throw new Error('User must be logged in to get AI analysis');
+        // Validate input data
+        if (!propertyData || !estimatedRent) {
+            throw new Error('Missing required property data or estimated rent');
         }
 
-        const idToken = await user.getIdToken();
+        // Ensure all numeric values are valid
+        const validatedData = {
+            price: Number(propertyData.price) || 0,
+            beds: Number(propertyData.beds) || 0,
+            baths: Number(propertyData.baths) || 0,
+            sqft: Number(propertyData.sqft) || 0,
+            yearBuilt: Number(propertyData.yearBuilt) || 0,
+            propertyType: propertyData.propertyType || 'Unknown',
+            address: propertyData.address || 'Unknown Address',
+            estimatedRent: Number(estimatedRent) || 0
+        };
 
-        // Make the request to the Cloud Function
-        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/getAIAnalysis', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}`,
-                'Accept': 'application/json'
-            },
-            mode: 'cors',
-            body: JSON.stringify({
-                propertyData,
-                estimatedRent
-            })
+        // Call Firebase Cloud Function
+        const getAIAnalysis = firebase.functions().httpsCallable('getAIAnalysis');
+        const result = await getAIAnalysis({
+            propertyData: validatedData,
+            estimatedRent: validatedData.estimatedRent
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Failed to get AI analysis: ${errorText}`);
-        }
-
-        const data = await response.json();
-        if (!data.analysis) {
-            throw new Error('No analysis data received');
-        }
-        return data.analysis;
+        return result.data;
     } catch (error) {
         console.error('Error getting AI analysis:', error);
-        throw new Error('Failed to get AI analysis. Please try again later.');
+        throw new Error('Failed to get AI analysis. Please try again.');
     }
 }
 
@@ -112,17 +104,59 @@ function extractPropertyType(doc) {
 
 // Function to populate calculator form with property data
 function populateCalculatorForm(propertyData) {
-    const form = document.getElementById('calculatorForm');
-    if (!form) return;
+    try {
+        // Update form fields
+        document.getElementById('propertyPrice').value = propertyData.price || '';
+        document.getElementById('beds').value = propertyData.beds || '';
+        document.getElementById('baths').value = propertyData.baths || '';
+        document.getElementById('sqft').value = propertyData.sqft || '';
+        document.getElementById('yearBuilt').value = propertyData.yearBuilt || '';
+        document.getElementById('propertyType').value = propertyData.propertyType || '';
+        document.getElementById('address').value = propertyData.address || '';
+        
+        // Show success message
+        showToast('Property data imported successfully!', 'success');
+    } catch (error) {
+        console.error('Error populating form:', error);
+        showToast('Error populating form. Please try again.', 'danger');
+    }
+}
 
-    // Update form fields with property data
-    form.querySelector('[name="propertyPrice"]').value = propertyData.price;
-    form.querySelector('[name="beds"]').value = propertyData.beds;
-    form.querySelector('[name="baths"]').value = propertyData.baths;
-    form.querySelector('[name="sqft"]').value = propertyData.sqft;
-    form.querySelector('[name="yearBuilt"]').value = propertyData.yearBuilt;
-    form.querySelector('[name="propertyType"]').value = propertyData.propertyType;
-    form.querySelector('[name="address"]').value = propertyData.address;
+// Function to show toast notifications
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    toastContainer.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+        toast.remove();
+    });
+}
+
+// Function to create toast container if it doesn't exist
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+    document.body.appendChild(container);
+    return container;
 }
 
 // Export functions
