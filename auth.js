@@ -97,12 +97,27 @@ async function saveAnalysis(analysisData) {
             throw new Error('User must be logged in to save analyses');
         }
 
-        const analysisRef = database.ref(`analyses/${user.uid}`).push();
-        await analysisRef.set({
-            ...analysisData,
+        // Clean and validate the data before saving
+        const cleanedData = {
+            propertyPrice: Number(analysisData.propertyPrice) || 0,
+            downPayment: Number(analysisData.downPayment) || 0,
+            interestRate: Number(analysisData.interestRate) || 0,
+            loanTerm: Number(analysisData.loanTerm) || 0,
+            monthlyRent: Number(analysisData.monthlyRent) || 0,
+            monthlyExpenses: Number(analysisData.monthlyExpenses) || 0,
+            monthlyMortgage: Number(analysisData.monthlyMortgage) || 0,
+            totalMonthlyCosts: Number(analysisData.totalMonthlyCosts) || 0,
+            monthlyProfitLoss: Number(analysisData.monthlyProfitLoss) || 0,
+            annualProfitLoss: Number(analysisData.annualProfitLoss) || 0,
+            cashOnCashReturn: Number(analysisData.cashOnCashReturn) || 0,
+            breakEvenPeriod: Number(analysisData.breakEvenPeriod) || 0,
+            dscr: Number(analysisData.dscr) || 0,
             createdAt: firebase.database.ServerValue.TIMESTAMP,
             updatedAt: firebase.database.ServerValue.TIMESTAMP
-        });
+        };
+
+        const analysisRef = database.ref(`analyses/${user.uid}`).push();
+        await analysisRef.set(cleanedData);
 
         showToast('Analysis saved successfully!');
     } catch (error) {

@@ -209,7 +209,6 @@
             const userDropdown = document.getElementById('userDropdown');
             const loginButton = document.getElementById('loginButton');
             const userMenuButton = document.getElementById('userMenuButton');
-            const userPhoto = document.getElementById('userPhoto');
             const userName = document.getElementById('userName');
             const calculatorContent = document.getElementById('calculatorContent');
             
@@ -220,7 +219,6 @@
                 calculatorContent.classList.remove('d-none');
                 
                 // Update user info
-                userPhoto.src = user.photoURL || 'https://via.placeholder.com/32';
                 userName.textContent = user.displayName || user.email;
                 
                 // Handle logout
