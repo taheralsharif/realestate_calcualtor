@@ -5,13 +5,29 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 // Function to get AI analysis using Firebase Cloud Functions
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
+        // Validate input data
+        if (!propertyData || !estimatedRent) {
+            throw new Error('Missing required property data or estimated rent');
+        }
+
+        // Ensure all numeric values are valid
+        const validatedData = {
+            price: Number(propertyData.price) || 0,
+            beds: Number(propertyData.beds) || 0,
+            baths: Number(propertyData.baths) || 0,
+            sqft: Number(propertyData.sqft) || 0,
+            yearBuilt: Number(propertyData.yearBuilt) || 0,
+            propertyType: propertyData.propertyType || 'Unknown',
+            address: propertyData.address || 'Unknown Address'
+        };
+
         // Get the Firebase Functions instance
         const getAIAnalysisFunction = firebase.functions().httpsCallable('getAIAnalysis');
         
-        // Call the Cloud Function
+        // Call the Cloud Function with validated data
         const result = await getAIAnalysisFunction({
-            propertyData,
-            estimatedRent
+            propertyData: validatedData,
+            estimatedRent: Number(estimatedRent) || 0
         });
         
         return result.data.analysis;
