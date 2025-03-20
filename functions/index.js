@@ -1,82 +1,94 @@
 const functions = require('firebase-functions');
-const fetch = require('node-fetch');
+const cors = require('cors')({ 
+    origin: ['https://taheralsharif.github.io', 'http://localhost:5000'],
+    methods: ['POST', 'OPTIONS'],
+    credentials: true
+});
+const { Groq } = require('groq-sdk');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
-const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
+// Initialize Groq client
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+});
 
-exports.getAIAnalysis = functions.https.onCall(async (data, context) => {
-    // Check if user is authenticated
-    if (!context.auth) {
-        throw new functions.https.HttpsError('unauthenticated', 'User must be logged in');
-    }
+exports.getAIAnalysis = functions.https.onRequest((request, response) => {
+    return cors(request, response, async () => {
+        try {
+            if (request.method === 'OPTIONS') {
+                response.status(204).send('');
+                return;
+            }
 
-    try {
-        // Get API key from database - updated path to match your database structure
-        const snapshot = await admin.database().ref('/groqApiKey').once('value');
-        const GROQ_API_KEY = snapshot.val();
+            if (request.method !== 'POST') {
+                response.status(405).send('Method Not Allowed');
+                return;
+            }
 
-        if (!GROQ_API_KEY) {
-            throw new functions.https.HttpsError('failed-precondition', 'API key not configured');
-        }
+            // Verify Firebase Auth token
+            const authHeader = request.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                response.status(401).send('Unauthorized');
+                return;
+            }
 
-        const { propertyData, estimatedRent } = data;
-        
-        const prompt = `Analyze this real estate investment opportunity and provide a detailed verdict:
+            const idToken = authHeader.split('Bearer ')[1];
+            try {
+                await admin.auth().verifyIdToken(idToken);
+            } catch (error) {
+                console.error('Auth error:', error);
+                response.status(401).send('Unauthorized');
+                return;
+            }
 
-Property Details:
-- Price: $${propertyData.price.toLocaleString()}
-- Estimated Monthly Rent: $${estimatedRent.toLocaleString()}
-- Beds: ${propertyData.beds}
-- Baths: ${propertyData.baths}
-- Square Feet: ${propertyData.sqft.toLocaleString()}
-- Year Built: ${propertyData.yearBuilt}
-- Property Type: ${propertyData.propertyType}
-- Address: ${propertyData.address}
+            const { propertyData, estimatedRent } = request.body;
 
-Please provide:
-1. Investment Verdict (Good, Moderate, or Poor)
-2. Key Strengths
-3. Potential Risks
-4. Market Analysis
-5. Recommendations for Improvement
-6. Estimated ROI Analysis
+            if (!propertyData || !estimatedRent) {
+                response.status(400).send('Missing required data');
+                return;
+            }
 
-Format the response in a clear, structured way.`;
+            const prompt = `Analyze this real estate investment opportunity:
+                Property Price: $${propertyData.price}
+                Estimated Monthly Rent: $${estimatedRent}
+                Property Type: ${propertyData.propertyType}
+                Bedrooms: ${propertyData.beds}
+                Bathrooms: ${propertyData.baths}
+                Square Footage: ${propertyData.sqft}
+                Year Built: ${propertyData.yearBuilt}
+                Address: ${propertyData.address}
 
-        const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'mixtral-8x7b-32768',
+                Please provide a detailed analysis including:
+                1. Market Analysis
+                2. Investment Potential
+                3. Risk Assessment
+                4. Recommendations`;
+
+            const completion = await groq.chat.completions.create({
                 messages: [
                     {
-                        role: 'system',
-                        content: 'You are a real estate investment expert providing detailed analysis of investment opportunities.'
+                        role: "system",
+                        content: "You are a real estate investment expert providing detailed analysis of investment opportunities."
                     },
                     {
-                        role: 'user',
+                        role: "user",
                         content: prompt
                     }
                 ],
+                model: "mixtral-8x7b-32768",
                 temperature: 0.7,
                 max_tokens: 1000
-            })
-        });
+            });
 
-        if (!response.ok) {
-            throw new Error('Failed to get AI analysis');
+            const analysis = completion.choices[0]?.message?.content || 'No analysis available';
+
+            response.status(200).json({ analysis });
+        } catch (error) {
+            console.error('Error in getAIAnalysis:', error);
+            response.status(500).send('Internal Server Error');
         }
-
-        const result = await response.json();
-        return { analysis: result.choices[0].message.content };
-    } catch (error) {
-        console.error('Error in AI analysis:', error);
-        throw new functions.https.HttpsError('internal', 'Failed to get AI analysis');
-    }
+    });
 }); 
