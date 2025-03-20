@@ -37,24 +37,6 @@ async function initializeFirebase() {
             updateUserProfile(user);
         });
 
-        // Set up Google Sign In button if it exists
-        const googleLoginBtn = document.getElementById('googleLoginBtn');
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', handleGoogleSignIn);
-        }
-
-        // Set up login form if it exists
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleEmailLogin);
-        }
-
-        // Set up signup form if it exists
-        const signupForm = document.getElementById('signupForm');
-        if (signupForm) {
-            signupForm.addEventListener('submit', handleEmailSignup);
-        }
-
         return true;
     } catch (error) {
         console.error('Firebase initialization error:', error);
@@ -68,7 +50,7 @@ async function handleGoogleSignIn(e) {
     e.preventDefault();
     try {
         if (!auth) {
-            throw new Error('Firebase Auth not initialized');
+            await initializeFirebase();
         }
         const provider = new firebase.auth.GoogleAuthProvider();
         const result = await auth.signInWithPopup(provider);
@@ -86,7 +68,7 @@ async function handleEmailLogin(e) {
     e.preventDefault();
     try {
         if (!auth) {
-            throw new Error('Firebase Auth not initialized');
+            await initializeFirebase();
         }
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
@@ -110,7 +92,7 @@ async function handleEmailSignup(e) {
     e.preventDefault();
     try {
         if (!auth) {
-            throw new Error('Firebase Auth not initialized');
+            await initializeFirebase();
         }
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
@@ -136,12 +118,12 @@ function updateUserProfile(user) {
     
     if (user) {
         // User is signed in
-        userDropdown.classList.remove('d-none');
-        loginButton.classList.add('d-none');
+        if (userDropdown) userDropdown.classList.remove('d-none');
+        if (loginButton) loginButton.classList.add('d-none');
         if (calculatorContent) calculatorContent.classList.remove('d-none');
         
         // Update user info
-        userName.textContent = user.displayName || user.email;
+        if (userName) userName.textContent = user.displayName || user.email;
         
         // Handle logout
         const logoutLink = document.getElementById('logoutLink');
@@ -157,11 +139,13 @@ function updateUserProfile(user) {
         }
     } else {
         // User is signed out
-        userDropdown.classList.add('d-none');
-        loginButton.classList.remove('d-none');
+        if (userDropdown) userDropdown.classList.add('d-none');
+        if (loginButton) loginButton.classList.remove('d-none');
         if (calculatorContent) calculatorContent.classList.add('d-none');
-        userName.textContent = 'User';
-        window.location.href = 'login.html';
+        if (userName) userName.textContent = 'User';
+        if (!window.location.pathname.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
     }
 }
 
@@ -170,6 +154,10 @@ async function saveAnalysis(analysisData) {
     try {
         if (!auth || !auth.currentUser) {
             throw new Error('User must be logged in to save analyses');
+        }
+
+        if (!db) {
+            await initializeFirebase();
         }
 
         const analysisRef = db.ref(`users/${auth.currentUser.uid}/analyses`);
@@ -199,6 +187,10 @@ async function getSavedAnalyses() {
             throw new Error('User must be logged in to view analyses');
         }
 
+        if (!db) {
+            await initializeFirebase();
+        }
+
         const snapshot = await db.ref(`users/${auth.currentUser.uid}/analyses`).once('value');
         const analyses = [];
         
@@ -223,6 +215,10 @@ async function deleteAnalysis(analysisId) {
     try {
         if (!auth || !auth.currentUser) {
             throw new Error('User must be logged in to delete analyses');
+        }
+
+        if (!db) {
+            await initializeFirebase();
         }
 
         await db.ref(`users/${auth.currentUser.uid}/analyses/${analysisId}`).remove();
@@ -255,7 +251,7 @@ function showToast(message, type = 'success') {
 async function resetPassword(email) {
     try {
         if (!auth) {
-            throw new Error('Firebase not initialized');
+            await initializeFirebase();
         }
         await auth.sendPasswordResetEmail(email);
         showToast('Password reset email sent! Please check your inbox.');
@@ -281,8 +277,29 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Initialize Firebase when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
-    const initialized = await initializeFirebase();
-    if (!initialized) {
-        console.error('Failed to initialize Firebase');
+    try {
+        const initialized = await initializeFirebase();
+        if (!initialized) {
+            console.error('Failed to initialize Firebase');
+        }
+
+        // Set up event listeners after Firebase is initialized
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', handleGoogleSignIn);
+        }
+
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleEmailLogin);
+        }
+
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', handleEmailSignup);
+        }
+    } catch (error) {
+        console.error('Error during initialization:', error);
+        showToast('Error initializing application. Please refresh the page.', 'danger');
     }
 }); 

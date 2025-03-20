@@ -197,6 +197,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Custom Scripts -->
     <script src="auth.js"></script>
     <script src="script.js"></script>
     <script>
@@ -213,27 +215,31 @@
                     
                     if (user) {
                         // User is signed in
-                        userDropdown.classList.remove('d-none');
-                        loginButton.classList.add('d-none');
-                        calculatorContent.classList.remove('d-none');
+                        if (userDropdown) userDropdown.classList.remove('d-none');
+                        if (loginButton) loginButton.classList.add('d-none');
+                        if (calculatorContent) calculatorContent.classList.remove('d-none');
                         
                         // Update user info
-                        document.getElementById('userName').textContent = user.displayName || user.email;
+                        const userName = document.getElementById('userName');
+                        if (userName) userName.textContent = user.displayName || user.email;
                         
                         // Handle logout
-                        document.getElementById('logoutLink').addEventListener('click', (e) => {
-                            e.preventDefault();
-                            auth.signOut().then(() => {
-                                window.location.href = 'login.html';
-                            }).catch((error) => {
-                                console.error('Error signing out:', error);
+                        const logoutLink = document.getElementById('logoutLink');
+                        if (logoutLink) {
+                            logoutLink.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                auth.signOut().then(() => {
+                                    window.location.href = 'login.html';
+                                }).catch((error) => {
+                                    console.error('Error signing out:', error);
+                                });
                             });
-                        });
+                        }
                     } else {
                         // User is signed out
-                        userDropdown.classList.add('d-none');
-                        loginButton.classList.remove('d-none');
-                        calculatorContent.classList.add('d-none');
+                        if (userDropdown) userDropdown.classList.add('d-none');
+                        if (loginButton) loginButton.classList.remove('d-none');
+                        if (calculatorContent) calculatorContent.classList.add('d-none');
                         window.location.href = 'login.html';
                     }
                 });
