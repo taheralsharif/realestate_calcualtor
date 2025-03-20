@@ -147,6 +147,24 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="auth.js"></script>
     <script>
+        // Wait for Firebase to be initialized
+        function waitForFirebase(callback, maxAttempts = 10) {
+            let attempts = 0;
+            const checkFirebase = () => {
+                if (window.firebase && window.firebase.apps.length > 0) {
+                    callback();
+                    return;
+                }
+                attempts++;
+                if (attempts < maxAttempts) {
+                    setTimeout(checkFirebase, 100);
+                } else {
+                    console.error('Firebase initialization timeout');
+                }
+            };
+            checkFirebase();
+        }
+
         // Show toast notification
         function showToast(message, type = 'success') {
             const toast = document.querySelector('.toast');
@@ -200,36 +218,14 @@
             }
         });
 
-        // Check authentication state
-        auth.onAuthStateChanged((user) => {
-            const userDropdown = document.getElementById('userDropdown');
-            const loginButton = document.getElementById('loginButton');
-            const userMenuButton = document.getElementById('userMenuButton');
-            const userName = document.getElementById('userName');
-            
-            if (user) {
-                // User is signed in
-                userDropdown.classList.remove('d-none');
-                loginButton.classList.add('d-none');
-                
-                // Update user info
-                userName.textContent = user.displayName || user.email;
-                
-                // Handle logout
-                document.getElementById('logoutLink').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    auth.signOut().then(() => {
-                        window.location.href = 'login.html';
-                    }).catch((error) => {
-                        console.error('Error signing out:', error);
-                    });
-                });
-            } else {
-                // User is signed out
-                userDropdown.classList.add('d-none');
-                loginButton.classList.remove('d-none');
-                userName.textContent = 'User';
-            }
+        // Wait for Firebase to be initialized before setting up auth state listener
+        waitForFirebase(() => {
+            // Check authentication state
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    window.location.href = 'calculator.html';
+                }
+            });
         });
     </script>
 </body>

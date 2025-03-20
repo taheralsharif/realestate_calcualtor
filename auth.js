@@ -15,24 +15,50 @@ let firebaseApp;
 let auth;
 let database;
 
-try {
-    if (!firebase.apps.length) {
-        firebaseApp = firebase.initializeApp(firebaseConfig);
-    } else {
-        firebaseApp = firebase.app();
+// Wait for Firebase to be loaded
+function initializeFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebaseApp = firebase.initializeApp(firebaseConfig);
+        } else {
+            firebaseApp = firebase.app();
+        }
+
+        // Initialize Auth and Database
+        auth = firebase.auth();
+        database = firebase.database();
+
+        // Set up auth state listener
+        auth.onAuthStateChanged((user) => {
+            updateUserProfile(user);
+        });
+
+        // Set up Google Sign In button if it exists
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', async () => {
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    await auth.signInWithPopup(provider);
+                    showToast('Successfully logged in with Google!');
+                    window.location.href = 'calculator.html';
+                } catch (error) {
+                    console.error('Google login error:', error);
+                    showToast('Error logging in with Google: ' + error.message, 'danger');
+                }
+            });
+        }
+
+    } catch (error) {
+        console.error('Firebase initialization error:', error);
     }
+}
 
-    // Initialize Auth and Database
-    auth = firebase.auth();
-    database = firebase.database();
-
-    // Set up auth state listener
-    auth.onAuthStateChanged((user) => {
-        updateUserProfile(user);
-    });
-
-} catch (error) {
-    console.error('Firebase initialization error:', error);
+// Initialize Firebase when the page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeFirebase);
+} else {
+    initializeFirebase();
 }
 
 // Theme toggle functionality
@@ -249,24 +275,6 @@ if (document.getElementById('signupForm')) {
             window.location.href = 'calculator.html';
         } catch (error) {
             showToast(error.message, 'danger');
-        }
-    });
-}
-
-// Google Sign In
-if (document.getElementById('googleLoginBtn')) {
-    document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-        try {
-            if (!auth) {
-                throw new Error('Firebase not initialized');
-            }
-            const provider = new firebase.auth.GoogleAuthProvider();
-            await auth.signInWithPopup(provider);
-            showToast('Successfully logged in with Google!');
-            window.location.href = 'calculator.html';
-        } catch (error) {
-            console.error('Google login error:', error);
-            showToast('Error logging in with Google: ' + error.message, 'danger');
         }
     });
 } 
