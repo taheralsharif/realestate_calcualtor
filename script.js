@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Global variable to store current results
-let currentResults = null;
+window.currentResults = null;
 
 // Calculator functionality
 document.getElementById('calculatorForm').addEventListener('submit', function(e) {
@@ -31,27 +31,10 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
     try {
         // Get form data
         const formData = new FormData(this);
-        const data = {
-            propertyPrice: parseFloat(formData.get('propertyPrice')),
-            downPayment: parseFloat(formData.get('downPayment')),
-            interestRate: parseFloat(formData.get('interestRate')),
-            loanTerm: parseInt(formData.get('loanTerm')),
-            monthlyRent: parseFloat(formData.get('monthlyRent')),
-            monthlyExpenses: parseFloat(formData.get('monthlyExpenses'))
-        };
-        
-        // Validate inputs
-        for (const [key, value] of Object.entries(data)) {
-            if (isNaN(value)) {
-                throw new Error(`Please enter a valid number for ${key}`);
-            }
-        }
-        
-        // Calculate investment
-        currentResults = calculateInvestment(data);
+        const results = calculateInvestment(formData);
         
         // Display results
-        displayResults(currentResults);
+        displayResults(results);
         
         // Show results card
         document.getElementById('resultsCard').classList.remove('d-none');
@@ -64,55 +47,47 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
 
 // Calculate investment metrics
 function calculateInvestment(data) {
-    try {
-        // Convert string inputs to numbers
-        const propertyPrice = data.propertyPrice;
-        const downPayment = data.downPayment;
-        const interestRate = data.interestRate / 100;
-        const loanTerm = data.loanTerm;
-        const monthlyRent = data.monthlyRent;
-        const monthlyExpenses = data.monthlyExpenses;
+    // Parse input values
+    const propertyPrice = Number(data.get('propertyPrice'));
+    const downPaymentPercent = Number(data.get('downPayment'));
+    const interestRate = Number(data.get('interestRate'));
+    const loanTerm = Number(data.get('loanTerm'));
+    const monthlyRent = Number(data.get('monthlyRent'));
+    const monthlyExpenses = Number(data.get('monthlyExpenses'));
 
-        // Calculate monthly mortgage payment
-        const loanAmount = propertyPrice - downPayment;
-        const monthlyRate = interestRate / 12;
-        const numberOfPayments = loanTerm * 12;
-        const monthlyMortgage = loanAmount * 
-            (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
-            (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+    // Calculate loan details
+    const downPayment = (propertyPrice * downPaymentPercent) / 100;
+    const loanAmount = propertyPrice - downPayment;
+    const monthlyInterestRate = (interestRate / 100) / 12;
+    const numberOfPayments = loanTerm * 12;
 
-        // Calculate total monthly costs
-        const totalMonthlyCosts = monthlyMortgage + monthlyExpenses;
+    // Calculate monthly mortgage payment
+    const monthlyMortgage = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
 
-        // Calculate monthly profit/loss
-        const monthlyProfit = monthlyRent - totalMonthlyCosts;
+    // Calculate monthly and annual metrics
+    const totalMonthlyCosts = monthlyMortgage + monthlyExpenses;
+    const monthlyProfitLoss = monthlyRent - totalMonthlyCosts;
+    const annualProfitLoss = monthlyProfitLoss * 12;
 
-        // Calculate annual profit/loss
-        const annualProfit = monthlyProfit * 12;
+    // Calculate investment metrics
+    const cashOnCashReturn = (annualProfitLoss / downPayment) * 100;
+    const dscr = monthlyRent / totalMonthlyCosts;
+    const breakEvenPeriod = propertyPrice / annualProfitLoss;
 
-        // Calculate cash-on-cash return
-        const cashOnCashReturn = (annualProfit / downPayment) * 100;
+    // Store results in global variable
+    window.currentResults = {
+        monthlyMortgage,
+        monthlyExpenses,
+        monthlyRent,
+        totalMonthlyCosts,
+        monthlyProfitLoss,
+        annualProfitLoss,
+        cashOnCashReturn,
+        dscr,
+        breakEvenPeriod
+    };
 
-        // Calculate break-even period (in months)
-        const breakEvenPeriod = downPayment / monthlyProfit;
-
-        // Calculate DSCR (Debt Service Coverage Ratio)
-        const dscr = monthlyRent / totalMonthlyCosts;
-
-        return {
-            monthlyMortgage: monthlyMortgage.toFixed(2),
-            totalMonthlyCosts: totalMonthlyCosts.toFixed(2),
-            monthlyProfit: monthlyProfit.toFixed(2),
-            annualProfit: annualProfit.toFixed(2),
-            cashOnCashReturn: cashOnCashReturn.toFixed(2),
-            breakEvenPeriod: breakEvenPeriod.toFixed(1),
-            dscr: dscr.toFixed(2),
-            monthlyRent: monthlyRent.toFixed(2)
-        };
-    } catch (error) {
-        console.error('Calculation error:', error);
-        throw new Error('An error occurred while calculating the investment. Please check your input values and try again.');
-    }
+    return window.currentResults;
 }
 
 function displayResults(results) {
@@ -123,39 +98,39 @@ function displayResults(results) {
                 <tbody>
                     <tr>
                         <td>Monthly Mortgage Payment</td>
-                        <td class="text-end">$${results.monthlyMortgage}</td>
+                        <td class="text-end">$${results.monthlyMortgage.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>Monthly Expenses</td>
-                        <td class="text-end">$${results.monthlyExpenses}</td>
+                        <td class="text-end">$${results.monthlyExpenses.toFixed(2)}</td>
                     </tr>
                     <tr class="table-primary">
                         <td>Total Monthly Costs</td>
-                        <td class="text-end">$${results.totalMonthlyCosts}</td>
+                        <td class="text-end">$${results.totalMonthlyCosts.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>Monthly Rental Income</td>
-                        <td class="text-end">$${results.monthlyRent}</td>
+                        <td class="text-end">$${results.monthlyRent.toFixed(2)}</td>
                     </tr>
-                    <tr class="${parseFloat(results.monthlyProfit) >= 0 ? 'table-success' : 'table-danger'}">
+                    <tr class="${parseFloat(results.monthlyProfitLoss) >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Monthly Profit/Loss</td>
-                        <td class="text-end">$${results.monthlyProfit}</td>
+                        <td class="text-end">$${results.monthlyProfitLoss.toFixed(2)}</td>
                     </tr>
-                    <tr class="${parseFloat(results.annualProfit) >= 0 ? 'table-success' : 'table-danger'}">
+                    <tr class="${parseFloat(results.annualProfitLoss) >= 0 ? 'table-success' : 'table-danger'}">
                         <td>Annual Profit/Loss</td>
-                        <td class="text-end">$${results.annualProfit}</td>
+                        <td class="text-end">$${results.annualProfitLoss.toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td>Cash-on-Cash Return</td>
-                        <td class="text-end">${results.cashOnCashReturn}%</td>
+                        <td class="text-end">${results.cashOnCashReturn.toFixed(2)}%</td>
                     </tr>
                     <tr>
                         <td>Break-even Period</td>
-                        <td class="text-end">${results.breakEvenPeriod} months</td>
+                        <td class="text-end">${results.breakEvenPeriod.toFixed(1)} months</td>
                     </tr>
                     <tr>
                         <td>DSCR</td>
-                        <td class="text-end">${results.dscr}</td>
+                        <td class="text-end">${results.dscr.toFixed(2)}</td>
                     </tr>
                 </tbody>
             </table>
@@ -173,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (downloadPDFBtn) {
         downloadPDFBtn.addEventListener('click', function() {
-            if (!currentResults) {
+            if (!window.currentResults) {
                 showToast('Please calculate results first', 'warning');
                 return;
             }
@@ -203,15 +178,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             // Add risk assessment
-            const riskLevel = currentResults.dscr >= 1.2 ? 'Low' : currentResults.dscr >= 1.0 ? 'Moderate' : 'High';
+            const riskLevel = window.currentResults.dscr >= 1.2 ? 'Low' : window.currentResults.dscr >= 1.0 ? 'Moderate' : 'High';
             const riskY = doc.lastAutoTable.finalY + 10;
-            doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${currentResults.dscr})`, 14, riskY);
+            doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${window.currentResults.dscr})`, 14, riskY);
             
             // Add investment analysis
             const analysisY = riskY + 10;
             doc.text('Investment Analysis:', 14, analysisY);
             doc.setFontSize(10);
-            const analysis = generateInvestmentAnalysis(currentResults);
+            const analysis = generateInvestmentAnalysis(window.currentResults);
             doc.text(analysis, 14, analysisY + 7);
             
             // Save the PDF

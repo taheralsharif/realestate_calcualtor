@@ -82,6 +82,13 @@
                         </h2>
                         <form id="calculatorForm">
                             <div class="row g-3">
+                                <div class="col-12">
+                                    <label for="propertyName" class="form-label">Property Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="bi bi-house"></i></span>
+                                        <input type="text" class="form-control" id="propertyName" name="propertyName" placeholder="Enter property name" required>
+                                    </div>
+                                </div>
                                 <div class="col-md-6">
                                     <label for="propertyPrice" class="form-label">Property Price</label>
                                     <div class="input-group">
@@ -238,39 +245,128 @@
             resultsDiv.appendChild(saveButton);
         }
 
-        // Save current analysis
+        // Update displayResults function to show proper results
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            const resultsCard = document.getElementById('resultsCard');
+            
+            if (!resultsDiv || !results) return;
+            
+            resultsCard.classList.remove('d-none');
+            
+            // Format numbers for display
+            const formatCurrency = num => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+            const formatPercent = num => num.toFixed(2) + '%';
+            const formatNumber = num => num.toFixed(2);
+
+            // Get property name
+            const propertyName = document.getElementById('propertyName').value || 'Unnamed Property';
+
+            // Determine investment verdict
+            let verdict = '';
+            let verdictClass = '';
+            
+            if (results.dscr >= 1.2 && results.cashOnCashReturn >= 8) {
+                verdict = 'Strong Investment';
+                verdictClass = 'text-success';
+            } else if (results.dscr >= 1.0 && results.cashOnCashReturn >= 5) {
+                verdict = 'Moderate Investment';
+                verdictClass = 'text-warning';
+            } else {
+                verdict = 'High Risk Investment';
+                verdictClass = 'text-danger';
+            }
+
+            // Create results HTML
+            resultsDiv.innerHTML = `
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">${propertyName}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Monthly Analysis</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Monthly Mortgage</td>
+                                        <td class="text-end">${formatCurrency(results.monthlyMortgage)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Expenses</td>
+                                        <td class="text-end">${formatCurrency(results.monthlyExpenses)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Monthly Rent</td>
+                                        <td class="text-end">${formatCurrency(results.monthlyRent)}</td>
+                                    </tr>
+                                    <tr class="table-active fw-bold">
+                                        <td>Monthly Profit/Loss</td>
+                                        <td class="text-end">${formatCurrency(results.monthlyProfitLoss)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="mb-3">Investment Metrics</h6>
+                                <table class="table table-sm">
+                                    <tr>
+                                        <td>Cash on Cash Return</td>
+                                        <td class="text-end">${formatPercent(results.cashOnCashReturn)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>DSCR</td>
+                                        <td class="text-end">${formatNumber(results.dscr)}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Break Even Period</td>
+                                        <td class="text-end">${formatNumber(results.breakEvenPeriod)} years</td>
+                                    </tr>
+                                    <tr class="table-active fw-bold">
+                                        <td>Annual Profit/Loss</td>
+                                        <td class="text-end">${formatCurrency(results.annualProfitLoss)}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <h5 class="mb-2">Investment Verdict</h5>
+                            <p class="mb-0 ${verdictClass} fw-bold">${verdict}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Add save button after displaying results
+            addSaveButton();
+        }
+
+        // Update saveCurrentAnalysis function to include all results
         async function saveCurrentAnalysis() {
             try {
                 const formData = new FormData(document.getElementById('calculatorForm'));
+                const currentResults = window.currentResults; // Get the current results from global variable
+
+                if (!currentResults) {
+                    showToast('Please calculate results before saving', 'danger');
+                    return;
+                }
+
                 const data = {
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
-                    propertyPrice: Number(formData.get('propertyPrice')) || 0,
-                    downPayment: Number(formData.get('downPayment')) || 0,
-                    interestRate: Number(formData.get('interestRate')) || 0,
-                    loanTerm: Number(formData.get('loanTerm')) || 0,
-                    monthlyRent: Number(formData.get('monthlyRent')) || 0,
-                    monthlyExpenses: Number(formData.get('monthlyExpenses')) || 0,
-                    monthlyMortgage: Number(formData.get('monthlyMortgage')) || 0,
-                    totalMonthlyCosts: Number(formData.get('totalMonthlyCosts')) || 0,
-                    monthlyProfitLoss: Number(formData.get('monthlyProfitLoss')) || 0,
-                    annualProfitLoss: Number(formData.get('annualProfitLoss')) || 0,
-                    cashOnCashReturn: Number(formData.get('cashOnCashReturn')) || 0,
-                    breakEvenPeriod: Number(formData.get('breakEvenPeriod')) || 0,
-                    dscr: Number(formData.get('dscr')) || 0
+                    propertyPrice: Number(formData.get('propertyPrice')),
+                    downPayment: Number(formData.get('downPayment')),
+                    interestRate: Number(formData.get('interestRate')),
+                    loanTerm: Number(formData.get('loanTerm')),
+                    monthlyRent: Number(formData.get('monthlyRent')),
+                    monthlyExpenses: Number(formData.get('monthlyExpenses')),
+                    ...currentResults // Spread the calculated results
                 };
 
                 await saveAnalysis(data);
             } catch (error) {
                 console.error('Error saving analysis:', error);
+                showToast('Error saving analysis', 'danger');
             }
-        }
-
-        // Update displayResults function to add save button
-        function displayResults(results) {
-            // ... existing display code ...
-            
-            // Add save button after displaying results
-            addSaveButton();
         }
     </script>
 </body>
