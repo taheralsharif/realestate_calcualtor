@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
 auth.onAuthStateChanged((user) => {
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
+    const createAccountBtn = document.getElementById('createAccountBtn');
     const userName = document.getElementById('userName');
     const userMenuButton = document.getElementById('userMenuButton');
     const logoutLink = document.getElementById('logoutLink');
@@ -43,6 +44,7 @@ auth.onAuthStateChanged((user) => {
         // User is signed in
         if (userDropdown) userDropdown.classList.remove('d-none');
         if (loginButton) loginButton.classList.add('d-none');
+        if (createAccountBtn) createAccountBtn.classList.add('d-none');
         if (userName) userName.textContent = user.displayName || user.email;
         if (userMenuButton) {
             userMenuButton.innerHTML = `
@@ -64,6 +66,7 @@ auth.onAuthStateChanged((user) => {
         // User is signed out
         if (userDropdown) userDropdown.classList.add('d-none');
         if (loginButton) loginButton.classList.remove('d-none');
+        if (createAccountBtn) createAccountBtn.classList.remove('d-none');
         if (userName) userName.textContent = 'User';
         if (userMenuButton) {
             userMenuButton.innerHTML = `
