@@ -13,7 +13,7 @@ const firebaseConfig = {
 // Initialize Firebase
 let firebaseApp;
 let auth;
-let database;
+let db;
 
 // Initialize Firebase with retry mechanism
 async function initializeFirebase() {
@@ -29,7 +29,7 @@ async function initializeFirebase() {
 
         // Initialize Auth and Database
         auth = firebase.auth();
-        database = firebase.database();
+        db = firebase.database();
 
         // Set up auth state listener
         auth.onAuthStateChanged((user) => {
@@ -165,24 +165,20 @@ function updateUserProfile(user) {
     }
 }
 
-// Initialize Firebase Realtime Database
-const db = firebase.database();
-
 // Save analysis to database
 async function saveAnalysis(analysisData) {
     try {
-        const user = auth.currentUser;
-        if (!user) {
+        if (!auth || !auth.currentUser) {
             throw new Error('User must be logged in to save analyses');
         }
 
-        const analysisRef = db.ref(`users/${user.uid}/analyses`);
+        const analysisRef = db.ref(`users/${auth.currentUser.uid}/analyses`);
         const newAnalysisRef = analysisRef.push();
         
         const analysis = {
             ...analysisData,
             id: newAnalysisRef.key,
-            userId: user.uid,
+            userId: auth.currentUser.uid,
             createdAt: Date.now()
         };
 
@@ -199,12 +195,11 @@ async function saveAnalysis(analysisData) {
 // Get saved analyses for current user
 async function getSavedAnalyses() {
     try {
-        const user = auth.currentUser;
-        if (!user) {
+        if (!auth || !auth.currentUser) {
             throw new Error('User must be logged in to view analyses');
         }
 
-        const snapshot = await db.ref(`users/${user.uid}/analyses`).once('value');
+        const snapshot = await db.ref(`users/${auth.currentUser.uid}/analyses`).once('value');
         const analyses = [];
         
         snapshot.forEach((childSnapshot) => {
@@ -226,12 +221,11 @@ async function getSavedAnalyses() {
 // Delete analysis
 async function deleteAnalysis(analysisId) {
     try {
-        const user = auth.currentUser;
-        if (!user) {
+        if (!auth || !auth.currentUser) {
             throw new Error('User must be logged in to delete analyses');
         }
 
-        await db.ref(`users/${user.uid}/analyses/${analysisId}`).remove();
+        await db.ref(`users/${auth.currentUser.uid}/analyses/${analysisId}`).remove();
         showToast('Analysis deleted successfully!', 'success');
         
         // Reload analyses list if on history page
@@ -286,13 +280,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Initialize Firebase when the page loads
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', async () => {
-        const initialized = await initializeFirebase();
-        if (!initialized) {
-            console.error('Failed to initialize Firebase');
-        }
-    });
-} else {
-    initializeFirebase();
-} 
+document.addEventListener('DOMContentLoaded', async () => {
+    const initialized = await initializeFirebase();
+    if (!initialized) {
+        console.error('Failed to initialize Firebase');
+    }
+}); 
