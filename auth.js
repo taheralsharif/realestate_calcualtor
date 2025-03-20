@@ -15,13 +15,16 @@ let firebaseApp;
 let auth;
 let database;
 
-// Wait for Firebase to be loaded
-function initializeFirebase() {
+// Initialize Firebase with retry mechanism
+async function initializeFirebase() {
     try {
+        // Check if Firebase is already initialized
         if (!firebase.apps.length) {
             firebaseApp = firebase.initializeApp(firebaseConfig);
+            console.log('Firebase initialized successfully');
         } else {
             firebaseApp = firebase.app();
+            console.log('Using existing Firebase app');
         }
 
         // Initialize Auth and Database
@@ -30,36 +33,106 @@ function initializeFirebase() {
 
         // Set up auth state listener
         auth.onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
             updateUserProfile(user);
         });
 
         // Set up Google Sign In button if it exists
         const googleLoginBtn = document.getElementById('googleLoginBtn');
         if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', async () => {
-                try {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    await auth.signInWithPopup(provider);
-                    showToast('Successfully logged in with Google!');
-                    window.location.href = 'calculator.html';
-                } catch (error) {
-                    console.error('Google login error:', error);
-                    showToast('Error logging in with Google: ' + error.message, 'danger');
-                }
-            });
+            googleLoginBtn.addEventListener('click', handleGoogleSignIn);
         }
 
+        // Set up login form if it exists
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleEmailLogin);
+        }
+
+        // Set up signup form if it exists
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', handleEmailSignup);
+        }
+
+        return true;
     } catch (error) {
         console.error('Firebase initialization error:', error);
+        showToast('Error initializing Firebase. Please refresh the page.', 'danger');
+        return false;
+    }
+}
+
+// Handle Google Sign In
+async function handleGoogleSignIn(e) {
+    e.preventDefault();
+    try {
+        if (!auth) {
+            throw new Error('Firebase Auth not initialized');
+        }
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        console.log('Google sign in successful:', result.user.email);
+        showToast('Successfully logged in with Google!');
+        window.location.href = 'calculator.html';
+    } catch (error) {
+        console.error('Google login error:', error);
+        showToast('Error logging in with Google: ' + error.message, 'danger');
+    }
+}
+
+// Handle Email Login
+async function handleEmailLogin(e) {
+    e.preventDefault();
+    try {
+        if (!auth) {
+            throw new Error('Firebase Auth not initialized');
+        }
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        if (!userCredential.user.emailVerified) {
+            showToast('Please verify your email address before logging in.', 'danger');
+            await auth.signOut();
+            return;
+        }
+        console.log('Email login successful:', userCredential.user.email);
+        window.location.href = 'calculator.html';
+    } catch (error) {
+        console.error('Email login error:', error);
+        showToast(error.message, 'danger');
+    }
+}
+
+// Handle Email Signup
+async function handleEmailSignup(e) {
+    e.preventDefault();
+    try {
+        if (!auth) {
+            throw new Error('Firebase Auth not initialized');
+        }
+        const email = document.getElementById('signupEmail').value;
+        const password = document.getElementById('signupPassword').value;
+
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await userCredential.user.sendEmailVerification();
+        console.log('Email signup successful:', userCredential.user.email);
+        showToast('Please check your email to verify your account.');
+        window.location.href = 'calculator.html';
+    } catch (error) {
+        console.error('Email signup error:', error);
+        showToast(error.message, 'danger');
     }
 }
 
 // Initialize Firebase when the page loads
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeFirebase);
-} else {
-    initializeFirebase();
-}
+document.addEventListener('DOMContentLoaded', async () => {
+    const initialized = await initializeFirebase();
+    if (!initialized) {
+        console.error('Failed to initialize Firebase');
+    }
+});
 
 // Theme toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -231,50 +304,4 @@ async function resetPassword(email) {
         showToast(error.message, 'danger');
         throw error;
     }
-}
-
-// Login with email and password
-if (document.getElementById('loginForm')) {
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            if (!auth) {
-                throw new Error('Firebase not initialized');
-            }
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            if (!userCredential.user.emailVerified) {
-                showToast('Please verify your email address before logging in.', 'danger');
-                await auth.signOut();
-                return;
-            }
-            window.location.href = 'calculator.html';
-        } catch (error) {
-            showToast(error.message, 'danger');
-        }
-    });
-}
-
-// Sign up with email and password
-if (document.getElementById('signupForm')) {
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-
-        try {
-            if (!auth) {
-                throw new Error('Firebase not initialized');
-            }
-            await auth.createUserWithEmailAndPassword(email, password);
-            // Send email verification
-            await auth.currentUser.sendEmailVerification();
-            showToast('Please check your email to verify your account.');
-            window.location.href = 'calculator.html';
-        } catch (error) {
-            showToast(error.message, 'danger');
-        }
-    });
 } 

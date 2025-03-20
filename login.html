@@ -147,32 +147,16 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="auth.js"></script>
     <script>
-        // Wait for Firebase to be initialized
-        function waitForFirebase(callback, maxAttempts = 10) {
-            let attempts = 0;
-            const checkFirebase = () => {
-                if (window.firebase && window.firebase.apps.length > 0) {
-                    callback();
-                    return;
-                }
-                attempts++;
-                if (attempts < maxAttempts) {
-                    setTimeout(checkFirebase, 100);
-                } else {
-                    console.error('Firebase initialization timeout');
-                }
-            };
-            checkFirebase();
-        }
-
         // Show toast notification
         function showToast(message, type = 'success') {
             const toast = document.querySelector('.toast');
             const toastMessage = document.getElementById('toastMessage');
-            toastMessage.textContent = message;
-            toast.classList.remove('bg-success', 'bg-danger');
-            toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-            new bootstrap.Toast(toast).show();
+            if (toast && toastMessage) {
+                toastMessage.textContent = message;
+                toast.classList.remove('bg-success', 'bg-danger');
+                toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+                new bootstrap.Toast(toast).show();
+            }
         }
 
         // Password Reset Modal
@@ -180,52 +164,55 @@
         const passwordResetModal = new bootstrap.Modal(document.getElementById('passwordResetModal'));
         const sendResetLinkBtn = document.getElementById('sendResetLink');
 
-        forgotPasswordLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            passwordResetModal.show();
-        });
+        if (forgotPasswordLink && passwordResetModal) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                passwordResetModal.show();
+            });
+        }
 
-        sendResetLinkBtn.addEventListener('click', async () => {
-            const email = document.getElementById('resetEmail').value;
-            if (email) {
-                try {
-                    await resetPassword(email);
-                    showToast('Password reset email sent! Please check your inbox.');
-                    passwordResetModal.hide();
-                } catch (error) {
-                    showToast(error.message, 'danger');
+        if (sendResetLinkBtn) {
+            sendResetLinkBtn.addEventListener('click', async () => {
+                const email = document.getElementById('resetEmail').value;
+                if (email) {
+                    try {
+                        await resetPassword(email);
+                        showToast('Password reset email sent! Please check your inbox.');
+                        passwordResetModal.hide();
+                    } catch (error) {
+                        showToast(error.message, 'danger');
+                    }
                 }
-            }
-        });
+            });
+        }
 
         // Remember me functionality
         const rememberMeCheckbox = document.getElementById('rememberMe');
         const emailInput = document.getElementById('email');
 
-        // Check if there's a saved email
-        const savedEmail = localStorage.getItem('rememberedEmail');
-        if (savedEmail) {
-            emailInput.value = savedEmail;
-            rememberMeCheckbox.checked = true;
-        }
-
-        // Save email when checkbox is checked
-        rememberMeCheckbox.addEventListener('change', () => {
-            if (rememberMeCheckbox.checked) {
-                localStorage.setItem('rememberedEmail', emailInput.value);
-            } else {
-                localStorage.removeItem('rememberedEmail');
+        if (rememberMeCheckbox && emailInput) {
+            // Check if there's a saved email
+            const savedEmail = localStorage.getItem('rememberedEmail');
+            if (savedEmail) {
+                emailInput.value = savedEmail;
+                rememberMeCheckbox.checked = true;
             }
-        });
 
-        // Wait for Firebase to be initialized before setting up auth state listener
-        waitForFirebase(() => {
-            // Check authentication state
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    window.location.href = 'calculator.html';
+            // Save email when checkbox is checked
+            rememberMeCheckbox.addEventListener('change', () => {
+                if (rememberMeCheckbox.checked) {
+                    localStorage.setItem('rememberedEmail', emailInput.value);
+                } else {
+                    localStorage.removeItem('rememberedEmail');
                 }
             });
+        }
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', () => {
+            if (auth && auth.currentUser) {
+                window.location.href = 'calculator.html';
+            }
         });
     </script>
 </body>

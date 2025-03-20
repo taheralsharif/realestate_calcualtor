@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Global variable to store current results
+let currentResults = null;
+
 // Calculator functionality
 document.getElementById('calculatorForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -45,10 +48,10 @@ document.getElementById('calculatorForm').addEventListener('submit', function(e)
         }
         
         // Calculate investment
-        const results = calculateInvestment(data);
+        currentResults = calculateInvestment(data);
         
         // Display results
-        displayResults(results);
+        displayResults(currentResults);
         
         // Show results card
         document.getElementById('resultsCard').classList.remove('d-none');
@@ -164,86 +167,107 @@ function displayResults(results) {
 }
 
 // Download functionality
-document.getElementById('downloadPDF').addEventListener('click', function() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(16);
-    doc.text('Real Estate Investment Analysis', 14, 15);
-    doc.setFontSize(12);
-    
-    // Get the results table
-    const table = document.querySelector('#results table');
-    const rows = Array.from(table.querySelectorAll('tr')).map(row => 
-        Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
-    );
-    
-    // Add the table
-    doc.autoTable({
-        head: [['Metric', 'Value']],
-        body: rows,
-        startY: 25,
-        theme: 'grid',
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [66, 139, 202] }
-    });
-    
-    // Add risk assessment
-    const riskLevel = results.dscr >= 1.2 ? 'Low' : results.dscr >= 1.0 ? 'Moderate' : 'High';
-    const riskY = doc.lastAutoTable.finalY + 10;
-    doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${results.dscr})`, 14, riskY);
-    
-    // Add investment analysis
-    const analysisY = riskY + 10;
-    doc.text('Investment Analysis:', 14, analysisY);
-    doc.setFontSize(10);
-    const analysis = generateInvestmentAnalysis(results);
-    doc.text(analysis, 14, analysisY + 7);
-    
-    // Save the PDF
-    doc.save('real-estate-analysis.pdf');
-});
+document.addEventListener('DOMContentLoaded', function() {
+    const downloadPDFBtn = document.getElementById('downloadPDF');
+    const downloadExcelBtn = document.getElementById('downloadExcel');
 
-document.getElementById('downloadExcel').addEventListener('click', function() {
-    // Create workbook
-    const wb = XLSX.utils.book_new();
-    
-    // Get the results table
-    const table = document.querySelector('#results table');
-    const rows = Array.from(table.querySelectorAll('tr')).map(row => 
-        Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
-    );
-    
-    // Create worksheet
-    const ws = XLSX.utils.aoa_to_sheet([
-        ['Real Estate Investment Analysis'],
-        [''],
-        ['Metric', 'Value'],
-        ...rows
-    ]);
-    
-    // Add risk assessment
-    const riskLevel = results.dscr >= 1.2 ? 'Low' : results.dscr >= 1.0 ? 'Moderate' : 'High';
-    XLSX.utils.sheet_add_aoa(ws, [
-        [''],
-        ['Risk Assessment'],
-        ['Risk Level', riskLevel],
-        ['DSCR', results.dscr]
-    ], { origin: -1 });
-    
-    // Add investment analysis
-    XLSX.utils.sheet_add_aoa(ws, [
-        [''],
-        ['Investment Analysis'],
-        [generateInvestmentAnalysis(results)]
-    ], { origin: -1 });
-    
-    // Add worksheet to workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Analysis');
-    
-    // Save the Excel file
-    XLSX.writeFile(wb, 'real-estate-analysis.xlsx');
+    if (downloadPDFBtn) {
+        downloadPDFBtn.addEventListener('click', function() {
+            if (!currentResults) {
+                showToast('Please calculate results first', 'warning');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(16);
+            doc.text('Real Estate Investment Analysis', 14, 15);
+            doc.setFontSize(12);
+            
+            // Get the results table
+            const table = document.querySelector('#results table');
+            const rows = Array.from(table.querySelectorAll('tr')).map(row => 
+                Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
+            );
+            
+            // Add the table
+            doc.autoTable({
+                head: [['Metric', 'Value']],
+                body: rows,
+                startY: 25,
+                theme: 'grid',
+                styles: { fontSize: 10 },
+                headStyles: { fillColor: [66, 139, 202] }
+            });
+            
+            // Add risk assessment
+            const riskLevel = currentResults.dscr >= 1.2 ? 'Low' : currentResults.dscr >= 1.0 ? 'Moderate' : 'High';
+            const riskY = doc.lastAutoTable.finalY + 10;
+            doc.text(`Risk Assessment: ${riskLevel} Risk (DSCR: ${currentResults.dscr})`, 14, riskY);
+            
+            // Add investment analysis
+            const analysisY = riskY + 10;
+            doc.text('Investment Analysis:', 14, analysisY);
+            doc.setFontSize(10);
+            const analysis = generateInvestmentAnalysis(currentResults);
+            doc.text(analysis, 14, analysisY + 7);
+            
+            // Save the PDF
+            doc.save('real-estate-analysis.pdf');
+            showToast('PDF downloaded successfully!', 'success');
+        });
+    }
+
+    if (downloadExcelBtn) {
+        downloadExcelBtn.addEventListener('click', function() {
+            if (!currentResults) {
+                showToast('Please calculate results first', 'warning');
+                return;
+            }
+
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Get the results table
+            const table = document.querySelector('#results table');
+            const rows = Array.from(table.querySelectorAll('tr')).map(row => 
+                Array.from(row.querySelectorAll('td')).map(cell => cell.textContent)
+            );
+            
+            // Create worksheet
+            const ws = XLSX.utils.aoa_to_sheet([
+                ['Real Estate Investment Analysis'],
+                [''],
+                ['Metric', 'Value'],
+                ...rows
+            ]);
+            
+            // Add risk assessment
+            const riskLevel = currentResults.dscr >= 1.2 ? 'Low' : currentResults.dscr >= 1.0 ? 'Moderate' : 'High';
+            XLSX.utils.sheet_add_aoa(ws, [
+                [''],
+                ['Risk Assessment'],
+                ['Risk Level', riskLevel],
+                ['DSCR', currentResults.dscr]
+            ], { origin: -1 });
+            
+            // Add investment analysis
+            XLSX.utils.sheet_add_aoa(ws, [
+                [''],
+                ['Investment Analysis'],
+                [generateInvestmentAnalysis(currentResults)]
+            ], { origin: -1 });
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Analysis');
+            
+            // Save the Excel file
+            XLSX.writeFile(wb, 'real-estate-analysis.xlsx');
+            showToast('Excel file downloaded successfully!', 'success');
+        });
+    }
 });
 
 function generateInvestmentAnalysis(results) {
