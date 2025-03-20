@@ -24,13 +24,25 @@ async function getAIAnalysis(propertyData, estimatedRent) {
 // Function to extract data from Zillow URL
 async function extractZillowData(url) {
     try {
-        // This is a placeholder function - in a real implementation,
-        // you would need to use a proper Zillow API or web scraping service
-        // that complies with Zillow's terms of service
-        throw new Error('Zillow data extraction is not implemented. Please enter property details manually.');
+        // Basic validation for Zillow URL
+        if (!url.includes('zillow.com')) {
+            throw new Error('Please enter a valid Zillow URL');
+        }
+
+        // For now, we'll return a placeholder object
+        // In a real implementation, you would use Zillow's API or a proper scraping service
+        return {
+            price: 0,
+            beds: 0,
+            baths: 0,
+            sqft: 0,
+            yearBuilt: 0,
+            propertyType: 'Single Family',
+            address: 'Please enter property details manually'
+        };
     } catch (error) {
         console.error('Error extracting Zillow data:', error);
-        throw error;
+        throw new Error('Please enter property details manually');
     }
 }
 

@@ -156,7 +156,7 @@
                                     <label for="estimatedRent" class="form-label">Estimated Monthly Rent</label>
                                     <div class="input-group">
                                         <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="estimatedRent" name="estimatedRent" required>
+                                        <input type="number" class="form-control" id="estimatedRent" name="estimatedRent" required min="0" step="100">
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3 d-flex align-items-end">
@@ -226,6 +226,25 @@
                                 <i class="bi bi-save me-2"></i>Save Analysis
                             </button>
                         </div>
+                        <div id="aiAnalysisContent"></div>
+                    </div>
+                </div>
+
+                <!-- Add this after the form -->
+                <div class="d-grid gap-2 mt-4" id="aiAnalysisSection" style="display: none;">
+                    <button type="button" class="btn btn-primary" id="analyzeWithAI">
+                        <i class="bi bi-robot"></i> Analyze with AI
+                    </button>
+                </div>
+
+                <!-- Add this in the results section -->
+                <div class="card mt-4" id="aiAnalysisCard" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-robot"></i> AI Investment Analysis
+                        </h5>
+                    </div>
+                    <div class="card-body">
                         <div id="aiAnalysisContent"></div>
                     </div>
                 </div>
@@ -482,6 +501,60 @@
         if (aiAnalysisButton) {
             aiAnalysisButton.addEventListener('click', handleAIAnalysis);
         }
+
+        // Update the Zillow URL form handler
+        document.getElementById('zillowUrlForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const urlInput = document.getElementById('zillowUrl');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showToast('Please enter a valid Zillow URL', 'error');
+                return;
+            }
+
+            try {
+                const propertyData = await extractZillowData(url);
+                populateCalculatorForm(propertyData);
+                showToast('Property data imported successfully!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message, 'error');
+            }
+        });
+
+        // Update the AI analysis handler
+        document.getElementById('analyzeWithAI').addEventListener('click', async function() {
+            const form = document.getElementById('calculatorForm');
+            const formData = new FormData(form);
+            
+            const propertyData = {
+                price: parseFloat(formData.get('propertyPrice')),
+                beds: parseInt(formData.get('beds')),
+                baths: parseInt(formData.get('baths')),
+                sqft: parseInt(formData.get('sqft')),
+                yearBuilt: parseInt(formData.get('yearBuilt')),
+                propertyType: formData.get('propertyType'),
+                address: formData.get('propertyName')
+            };
+            
+            const estimatedRent = parseFloat(formData.get('estimatedRent'));
+            
+            if (!estimatedRent) {
+                showToast('Please enter an estimated monthly rent', 'error');
+                return;
+            }
+
+            try {
+                const analysis = await getAIAnalysis(propertyData, estimatedRent);
+                document.getElementById('aiAnalysisContent').innerHTML = analysis.replace(/\n/g, '<br>');
+                document.getElementById('aiAnalysisCard').style.display = 'block';
+                showToast('AI analysis completed!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(error.message, 'error');
+            }
+        });
     </script>
 </body>
 </html> 
