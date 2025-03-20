@@ -84,9 +84,15 @@
                             <div class="input-group">
                                 <input type="url" class="form-control" id="zillowUrl" 
                                        placeholder="Paste Zillow property URL here" required>
-                                <button class="btn btn-primary" type="submit">
+                                <button class="btn btn-primary" type="submit" id="importButton">
                                     <i class="bi bi-download me-2"></i>Import Data
                                 </button>
+                            </div>
+                            <div id="importLoading" class="mt-2 d-none">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span class="ms-2">Retrieving property data...</span>
                             </div>
                         </form>
                     </div>
@@ -160,6 +166,16 @@
                                 </div>
                             </div>
 
+                            <!-- AI Analysis Loading -->
+                            <div id="aiAnalysisLoading" class="row d-none">
+                                <div class="col-12">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <span class="ms-2">Generating AI analysis...</span>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary">
@@ -174,7 +190,12 @@
                 <!-- Results Section -->
                 <div id="results" class="card mb-4 d-none">
                     <div class="card-body">
-                        <h5 class="card-title">Investment Analysis Results</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">Investment Analysis Results</h5>
+                            <button class="btn btn-success" onclick="saveCurrentAnalysis()">
+                                <i class="bi bi-save me-2"></i>Save Analysis
+                            </button>
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <h6>Monthly Costs</h6>
@@ -198,7 +219,15 @@
 
                 <!-- AI Analysis Section -->
                 <div id="aiAnalysisSection" class="card mb-4 d-none">
-                    <!-- AI analysis will be displayed here -->
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="card-title mb-0">AI Investment Analysis</h5>
+                            <button class="btn btn-success" onclick="saveAIAnalysis()">
+                                <i class="bi bi-save me-2"></i>Save Analysis
+                            </button>
+                        </div>
+                        <div id="aiAnalysisContent"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -234,6 +263,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
     
     <!-- Custom Scripts -->
     <script src="auth.js"></script>
@@ -291,6 +321,8 @@
         async function handleZillowUrlSubmit(e) {
             e.preventDefault();
             const urlInput = document.getElementById('zillowUrl');
+            const importButton = document.getElementById('importButton');
+            const importLoading = document.getElementById('importLoading');
             const url = urlInput.value.trim();
             
             if (!url) {
@@ -299,7 +331,10 @@
             }
 
             try {
-                showToast('Extracting property data...', 'info');
+                // Show loading state
+                importButton.disabled = true;
+                importLoading.classList.remove('d-none');
+                
                 const propertyData = await extractZillowData(url);
                 
                 // Populate the calculator form with Zillow data
@@ -315,12 +350,18 @@
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Failed to extract property data. Please try again.', 'danger');
+            } finally {
+                // Hide loading state
+                importButton.disabled = false;
+                importLoading.classList.add('d-none');
             }
         }
 
         // Handle AI analysis
         async function handleAIAnalysis(e) {
             e.preventDefault();
+            const aiAnalysisButton = document.getElementById('aiAnalysisButton');
+            const aiAnalysisLoading = document.getElementById('aiAnalysisLoading');
             const formData = new FormData(document.getElementById('calculatorForm'));
             const propertyData = {
                 price: Number(formData.get('propertyPrice')),
@@ -340,22 +381,17 @@
             }
 
             try {
-                showToast('Getting AI analysis...', 'info');
+                // Show loading state
+                aiAnalysisButton.disabled = true;
+                aiAnalysisLoading.classList.remove('d-none');
+                
                 const analysis = await getAIAnalysis(propertyData, estimatedRent);
                 
                 // Display the AI analysis
                 const aiAnalysisSection = document.getElementById('aiAnalysisSection');
-                if (aiAnalysisSection) {
-                    aiAnalysisSection.innerHTML = `
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title">AI Investment Analysis</h5>
-                                <div class="analysis-content">
-                                    ${analysis.replace(/\n/g, '<br>')}
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                const aiAnalysisContent = document.getElementById('aiAnalysisContent');
+                if (aiAnalysisSection && aiAnalysisContent) {
+                    aiAnalysisContent.innerHTML = analysis.replace(/\n/g, '<br>');
                     aiAnalysisSection.classList.remove('d-none');
                 }
                 
@@ -363,6 +399,76 @@
             } catch (error) {
                 console.error('Error:', error);
                 showToast('Failed to get AI analysis. Please try again.', 'danger');
+            } finally {
+                // Hide loading state
+                aiAnalysisButton.disabled = false;
+                aiAnalysisLoading.classList.add('d-none');
+            }
+        }
+
+        // Save current analysis
+        async function saveCurrentAnalysis() {
+            try {
+                if (!auth || !auth.currentUser) {
+                    showToast('Please log in to save analyses', 'danger');
+                    return;
+                }
+
+                const formData = new FormData(document.getElementById('calculatorForm'));
+                const currentResults = window.currentResults;
+
+                if (!currentResults) {
+                    showToast('Please calculate results before saving', 'danger');
+                    return;
+                }
+
+                const data = {
+                    propertyName: formData.get('propertyName') || 'Unnamed Property',
+                    propertyPrice: Number(formData.get('propertyPrice')),
+                    downPayment: Number(formData.get('downPayment')),
+                    interestRate: Number(formData.get('interestRate')),
+                    loanTerm: Number(formData.get('loanTerm')),
+                    monthlyRent: Number(formData.get('estimatedRent')),
+                    monthlyExpenses: Number(formData.get('monthlyExpenses')),
+                    ...currentResults,
+                    type: 'calculator'
+                };
+
+                await saveAnalysis(data);
+            } catch (error) {
+                console.error('Error saving analysis:', error);
+                showToast('Error saving analysis', 'danger');
+            }
+        }
+
+        // Save AI analysis
+        async function saveAIAnalysis() {
+            try {
+                if (!auth || !auth.currentUser) {
+                    showToast('Please log in to save analyses', 'danger');
+                    return;
+                }
+
+                const formData = new FormData(document.getElementById('calculatorForm'));
+                const aiAnalysisContent = document.getElementById('aiAnalysisContent');
+
+                if (!aiAnalysisContent) {
+                    showToast('No AI analysis to save', 'danger');
+                    return;
+                }
+
+                const data = {
+                    propertyName: formData.get('propertyName') || 'Unnamed Property',
+                    propertyPrice: Number(formData.get('propertyPrice')),
+                    estimatedRent: Number(formData.get('estimatedRent')),
+                    aiAnalysis: aiAnalysisContent.innerHTML,
+                    type: 'ai'
+                };
+
+                await saveAnalysis(data);
+            } catch (error) {
+                console.error('Error saving AI analysis:', error);
+                showToast('Error saving AI analysis', 'danger');
             }
         }
 

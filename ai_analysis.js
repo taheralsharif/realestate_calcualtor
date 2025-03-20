@@ -2,34 +2,35 @@
 const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
+// Function to get AI analysis using Firebase Cloud Functions
+async function getAIAnalysis(propertyData, estimatedRent) {
+    try {
+        // Get the Firebase Functions instance
+        const getAIAnalysisFunction = firebase.functions().httpsCallable('getAIAnalysis');
+        
+        // Call the Cloud Function
+        const result = await getAIAnalysisFunction({
+            propertyData,
+            estimatedRent
+        });
+        
+        return result.data.analysis;
+    } catch (error) {
+        console.error('Error getting AI analysis:', error);
+        throw new Error('Failed to get AI analysis. Please try again later.');
+    }
+}
+
 // Function to extract data from Zillow URL
 async function extractZillowData(url) {
     try {
-        // Use a proxy service to bypass CORS
-        const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-        const response = await fetch(proxyUrl);
-        const html = await response.text();
-        
-        // Create a temporary DOM element to parse the HTML
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Extract property details
-        const propertyData = {
-            price: extractPrice(doc),
-            beds: extractBeds(doc),
-            baths: extractBaths(doc),
-            sqft: extractSqft(doc),
-            address: extractAddress(doc),
-            description: extractDescription(doc),
-            yearBuilt: extractYearBuilt(doc),
-            propertyType: extractPropertyType(doc)
-        };
-        
-        return propertyData;
+        // This is a placeholder function - in a real implementation,
+        // you would need to use a proper Zillow API or web scraping service
+        // that complies with Zillow's terms of service
+        throw new Error('Zillow data extraction is not implemented. Please enter property details manually.');
     } catch (error) {
         console.error('Error extracting Zillow data:', error);
-        throw new Error('Failed to extract property data from Zillow');
+        throw error;
     }
 }
 
@@ -74,86 +75,30 @@ function extractPropertyType(doc) {
     return typeElement ? typeElement.textContent.trim() : null;
 }
 
-// Function to get AI analysis of the investment
-async function getAIAnalysis(propertyData, estimatedRent) {
-    try {
-        const prompt = `Analyze this real estate investment opportunity and provide a detailed verdict:
-
-Property Details:
-- Price: $${propertyData.price.toLocaleString()}
-- Estimated Monthly Rent: $${estimatedRent.toLocaleString()}
-- Beds: ${propertyData.beds}
-- Baths: ${propertyData.baths}
-- Square Feet: ${propertyData.sqft.toLocaleString()}
-- Year Built: ${propertyData.yearBuilt}
-- Property Type: ${propertyData.propertyType}
-- Address: ${propertyData.address}
-
-Please provide:
-1. Investment Verdict (Good, Moderate, or Poor)
-2. Key Strengths
-3. Potential Risks
-4. Market Analysis
-5. Recommendations for Improvement
-6. Estimated ROI Analysis
-
-Format the response in a clear, structured way.`;
-
-        const response = await fetch(GROQ_API_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${GROQ_API_KEY}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: 'mixtral-8x7b-32768',
-                messages: [
-                    {
-                        role: 'system',
-                        content: 'You are a real estate investment expert providing detailed analysis of investment opportunities.'
-                    },
-                    {
-                        role: 'user',
-                        content: prompt
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get AI analysis');
-        }
-
-        const data = await response.json();
-        return data.choices[0].message.content;
-    } catch (error) {
-        console.error('Error getting AI analysis:', error);
-        throw new Error('Failed to get AI analysis');
-    }
-}
-
-// Function to populate calculator form with Zillow data
+// Function to populate calculator form with property data
 function populateCalculatorForm(propertyData) {
     const form = document.getElementById('calculatorForm');
     if (!form) return;
 
-    // Map Zillow data to form fields
-    const fieldMappings = {
-        'propertyPrice': propertyData.price,
-        'propertyName': propertyData.address
+    // Populate form fields with property data
+    const fields = {
+        'propertyName': propertyData.address || '',
+        'propertyPrice': propertyData.price || '',
+        'beds': propertyData.beds || '',
+        'baths': propertyData.baths || '',
+        'sqft': propertyData.sqft || '',
+        'yearBuilt': propertyData.yearBuilt || '',
+        'propertyType': propertyData.propertyType || ''
     };
 
-    // Update form fields
-    Object.entries(fieldMappings).forEach(([fieldName, value]) => {
+    for (const [fieldName, value] of Object.entries(fields)) {
         const input = form.querySelector(`[name="${fieldName}"]`);
-        if (input && value) {
+        if (input) {
             input.value = value;
-            // Trigger input event to update any dependent calculations
+            // Trigger input event to update any dependent fields
             input.dispatchEvent(new Event('input'));
         }
-    });
+    }
 }
 
 // Export functions
