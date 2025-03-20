@@ -71,97 +71,134 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container my-5" id="calculatorContent">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card shadow-sm">
+    <div class="container my-5">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="mb-4">Real Estate Investment Calculator</h2>
+                
+                <!-- Zillow URL Input -->
+                <div class="card mb-4">
                     <div class="card-body">
-                        <h2 class="card-title mb-4">
-                            <i class="bi bi-calculator me-2"></i>
-                            Investment Calculator
-                        </h2>
-                        <form id="calculatorForm">
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label for="propertyName" class="form-label">Property Name</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="bi bi-house"></i></span>
-                                        <input type="text" class="form-control" id="propertyName" name="propertyName" placeholder="Enter property name" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="propertyPrice" class="form-label">Property Price</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="propertyPrice" name="propertyPrice" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="downPayment" class="form-label">Down Payment (%)</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="downPayment" name="downPayment" value="20" required>
-                                        <span class="input-group-text">%</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="interestRate" class="form-label">Interest Rate (%)</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="interestRate" name="interestRate" step="0.1" required>
-                                        <span class="input-group-text">%</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="loanTerm" class="form-label">Loan Term (years)</label>
-                                    <div class="input-group">
-                                        <input type="number" class="form-control" id="loanTerm" name="loanTerm" value="30" required>
-                                        <span class="input-group-text">years</span>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="monthlyRent" class="form-label">Expected Monthly Rent</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="monthlyRent" name="monthlyRent" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="monthlyExpenses" class="form-label">Monthly Expenses</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="monthlyExpenses" name="monthlyExpenses" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-calculator me-2"></i>
-                                    Calculate
+                        <h5 class="card-title">Import Property Data from Zillow</h5>
+                        <form id="zillowForm" class="mb-3">
+                            <div class="input-group">
+                                <input type="url" class="form-control" id="zillowUrl" 
+                                       placeholder="Paste Zillow property URL here" required>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-download me-2"></i>Import Data
                                 </button>
                             </div>
                         </form>
                     </div>
                 </div>
 
-                <div class="card shadow-sm results-card d-none mt-4" id="resultsCard">
+                <!-- Calculator Form -->
+                <div class="card mb-4">
                     <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h2 class="card-title mb-0">
-                                <i class="bi bi-graph-up me-2"></i>
-                                Results
-                            </h2>
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-primary" id="downloadPDF">
-                                    <i class="bi bi-file-pdf me-2"></i>
-                                    PDF
-                                </button>
-                                <button type="button" class="btn btn-success" id="downloadExcel">
-                                    <i class="bi bi-file-excel me-2"></i>
-                                    Excel
-                                </button>
+                        <form id="calculatorForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="propertyName" class="form-label">Property Name</label>
+                                    <input type="text" class="form-control" id="propertyName" name="propertyName" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="propertyPrice" class="form-label">Property Price</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="propertyPrice" name="propertyPrice" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="downPayment" class="form-label">Down Payment</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="downPayment" name="downPayment" value="20" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="interestRate" class="form-label">Interest Rate</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="interestRate" name="interestRate" value="7" step="0.1" required>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="loanTerm" class="form-label">Loan Term</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="loanTerm" name="loanTerm" value="30" required>
+                                        <span class="input-group-text">years</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="monthlyExpenses" class="form-label">Monthly Expenses</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="monthlyExpenses" name="monthlyExpenses" value="0" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estimated Rent Section -->
+                            <div id="estimatedRentSection" class="row d-none">
+                                <div class="col-md-6 mb-3">
+                                    <label for="estimatedRent" class="form-label">Estimated Monthly Rent</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="estimatedRent" name="estimatedRent" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3 d-flex align-items-end">
+                                    <button type="button" class="btn btn-primary" id="aiAnalysisButton">
+                                        <i class="bi bi-robot me-2"></i>Get AI Analysis
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-calculator me-2"></i>Calculate
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="results" class="card mb-4 d-none">
+                    <div class="card-body">
+                        <h5 class="card-title">Investment Analysis Results</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Monthly Costs</h6>
+                                <p>Mortgage Payment: <span id="mortgagePayment">$0</span></p>
+                                <p>Total Monthly Costs: <span id="totalMonthlyCosts">$0</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Profitability</h6>
+                                <p>Monthly Profit/Loss: <span id="monthlyProfit">$0</span></p>
+                                <p>Annual Profit/Loss: <span id="annualProfit">$0</span></p>
+                                <p>Cash-on-Cash Return: <span id="cashOnCashReturn">0%</span></p>
+                                <p>DSCR: <span id="dscr">0</span></p>
                             </div>
                         </div>
-                        <div id="results"></div>
+                        <div class="mt-3">
+                            <h6>Investment Verdict</h6>
+                            <p id="investmentVerdict" class="mb-0"></p>
+                        </div>
                     </div>
+                </div>
+
+                <!-- AI Analysis Section -->
+                <div id="aiAnalysisSection" class="card mb-4 d-none">
+                    <!-- AI analysis will be displayed here -->
                 </div>
             </div>
         </div>
@@ -200,6 +237,7 @@
     
     <!-- Custom Scripts -->
     <script src="auth.js"></script>
+    <script src="ai_analysis.js"></script>
     <script src="script.js"></script>
     <script>
         // Wait for Firebase to initialize before setting up auth state listener
@@ -249,50 +287,94 @@
             }
         });
 
-        // Add save button to results
-        function addSaveButton() {
-            const resultsDiv = document.getElementById('results');
-            if (!resultsDiv) return;
+        // Handle Zillow URL submission
+        async function handleZillowUrlSubmit(e) {
+            e.preventDefault();
+            const urlInput = document.getElementById('zillowUrl');
+            const url = urlInput.value.trim();
+            
+            if (!url) {
+                showToast('Please enter a Zillow URL', 'danger');
+                return;
+            }
 
-            const saveButton = document.createElement('button');
-            saveButton.className = 'btn btn-primary mt-3';
-            saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
-            saveButton.onclick = saveCurrentAnalysis;
-            resultsDiv.appendChild(saveButton);
+            try {
+                showToast('Extracting property data...', 'info');
+                const propertyData = await extractZillowData(url);
+                
+                // Populate the calculator form with Zillow data
+                populateCalculatorForm(propertyData);
+                
+                // Show the estimated rent input
+                const estimatedRentSection = document.getElementById('estimatedRentSection');
+                if (estimatedRentSection) {
+                    estimatedRentSection.classList.remove('d-none');
+                }
+                
+                showToast('Property data extracted successfully!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to extract property data. Please try again.', 'danger');
+            }
         }
 
-        // Update saveCurrentAnalysis function to include all results
-        async function saveCurrentAnalysis() {
-            try {
-                if (!auth || !auth.currentUser) {
-                    showToast('Please log in to save analyses', 'danger');
-                    return;
-                }
-
-                const formData = new FormData(document.getElementById('calculatorForm'));
-                const currentResults = window.currentResults;
-
-                if (!currentResults) {
-                    showToast('Please calculate results before saving', 'danger');
-                    return;
-                }
-
-                const data = {
-                    propertyName: formData.get('propertyName') || 'Unnamed Property',
-                    propertyPrice: Number(formData.get('propertyPrice')),
-                    downPayment: Number(formData.get('downPayment')),
-                    interestRate: Number(formData.get('interestRate')),
-                    loanTerm: Number(formData.get('loanTerm')),
-                    monthlyRent: Number(formData.get('monthlyRent')),
-                    monthlyExpenses: Number(formData.get('monthlyExpenses')),
-                    ...currentResults
-                };
-
-                await saveAnalysis(data);
-            } catch (error) {
-                console.error('Error saving analysis:', error);
-                showToast('Error saving analysis', 'danger');
+        // Handle AI analysis
+        async function handleAIAnalysis(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('calculatorForm'));
+            const propertyData = {
+                price: Number(formData.get('propertyPrice')),
+                beds: Number(formData.get('beds')),
+                baths: Number(formData.get('baths')),
+                sqft: Number(formData.get('sqft')),
+                address: formData.get('propertyName'),
+                yearBuilt: Number(formData.get('yearBuilt')),
+                propertyType: formData.get('propertyType')
+            };
+            
+            const estimatedRent = Number(formData.get('estimatedRent'));
+            
+            if (!estimatedRent) {
+                showToast('Please enter an estimated monthly rent', 'danger');
+                return;
             }
+
+            try {
+                showToast('Getting AI analysis...', 'info');
+                const analysis = await getAIAnalysis(propertyData, estimatedRent);
+                
+                // Display the AI analysis
+                const aiAnalysisSection = document.getElementById('aiAnalysisSection');
+                if (aiAnalysisSection) {
+                    aiAnalysisSection.innerHTML = `
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">AI Investment Analysis</h5>
+                                <div class="analysis-content">
+                                    ${analysis.replace(/\n/g, '<br>')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    aiAnalysisSection.classList.remove('d-none');
+                }
+                
+                showToast('AI analysis completed!', 'success');
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('Failed to get AI analysis. Please try again.', 'danger');
+            }
+        }
+
+        // Add event listeners
+        const zillowForm = document.getElementById('zillowForm');
+        if (zillowForm) {
+            zillowForm.addEventListener('submit', handleZillowUrlSubmit);
+        }
+
+        const aiAnalysisButton = document.getElementById('aiAnalysisButton');
+        if (aiAnalysisButton) {
+            aiAnalysisButton.addEventListener('click', handleAIAnalysis);
         }
     </script>
 </body>
