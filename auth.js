@@ -22,11 +22,14 @@ try {
         firebaseApp = firebase.app();
     }
 
-    // Initialize Realtime Database
+    // Initialize Auth and Database
+    auth = firebase.auth();
     database = firebase.database();
 
-    // Initialize Auth
-    auth = firebase.auth();
+    // Set up auth state listener
+    auth.onAuthStateChanged((user) => {
+        updateUserProfile(user);
+    });
 
 } catch (error) {
     console.error('Firebase initialization error:', error);
@@ -176,13 +179,6 @@ async function deleteAnalysis(analysisId) {
         showToast('Error deleting analysis. Please try again.', 'danger');
         throw error;
     }
-}
-
-// Initialize Firebase Auth state listener
-if (auth) {
-    auth.onAuthStateChanged((user) => {
-        updateUserProfile(user);
-    });
 }
 
 // Show toast notification

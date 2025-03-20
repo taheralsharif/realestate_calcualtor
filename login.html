@@ -144,7 +144,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="auth.js"></script>
     <script>
         // Show toast notification
@@ -197,6 +197,38 @@
                 localStorage.setItem('rememberedEmail', emailInput.value);
             } else {
                 localStorage.removeItem('rememberedEmail');
+            }
+        });
+
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            const userDropdown = document.getElementById('userDropdown');
+            const loginButton = document.getElementById('loginButton');
+            const userMenuButton = document.getElementById('userMenuButton');
+            const userName = document.getElementById('userName');
+            
+            if (user) {
+                // User is signed in
+                userDropdown.classList.remove('d-none');
+                loginButton.classList.add('d-none');
+                
+                // Update user info
+                userName.textContent = user.displayName || user.email;
+                
+                // Handle logout
+                document.getElementById('logoutLink').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    auth.signOut().then(() => {
+                        window.location.href = 'login.html';
+                    }).catch((error) => {
+                        console.error('Error signing out:', error);
+                    });
+                });
+            } else {
+                // User is signed out
+                userDropdown.classList.add('d-none');
+                loginButton.classList.remove('d-none');
+                userName.textContent = 'User';
             }
         });
     </script>
