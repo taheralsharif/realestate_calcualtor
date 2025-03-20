@@ -126,28 +126,6 @@ async function handleEmailSignup(e) {
     }
 }
 
-// Initialize Firebase when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    const initialized = await initializeFirebase();
-    if (!initialized) {
-        console.error('Failed to initialize Firebase');
-    }
-});
-
-// Theme toggle functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            this.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
-        });
-    }
-});
-
 // Update user profile display
 function updateUserProfile(user) {
     const userDropdown = document.getElementById('userDropdown');
@@ -187,41 +165,30 @@ function updateUserProfile(user) {
     }
 }
 
-// Save analysis to Realtime Database
+// Initialize Firebase Realtime Database
+const db = firebase.database();
+
+// Save analysis to database
 async function saveAnalysis(analysisData) {
     try {
-        if (!auth || !database) {
-            throw new Error('Firebase not initialized');
-        }
-
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to save analyses');
         }
 
-        // Clean and validate the data before saving
-        const cleanedData = {
-            propertyPrice: Number(analysisData.propertyPrice) || 0,
-            downPayment: Number(analysisData.downPayment) || 0,
-            interestRate: Number(analysisData.interestRate) || 0,
-            loanTerm: Number(analysisData.loanTerm) || 0,
-            monthlyRent: Number(analysisData.monthlyRent) || 0,
-            monthlyExpenses: Number(analysisData.monthlyExpenses) || 0,
-            monthlyMortgage: Number(analysisData.monthlyMortgage) || 0,
-            totalMonthlyCosts: Number(analysisData.totalMonthlyCosts) || 0,
-            monthlyProfitLoss: Number(analysisData.monthlyProfitLoss) || 0,
-            annualProfitLoss: Number(analysisData.annualProfitLoss) || 0,
-            cashOnCashReturn: Number(analysisData.cashOnCashReturn) || 0,
-            breakEvenPeriod: Number(analysisData.breakEvenPeriod) || 0,
-            dscr: Number(analysisData.dscr) || 0,
-            createdAt: firebase.database.ServerValue.TIMESTAMP,
-            updatedAt: firebase.database.ServerValue.TIMESTAMP
+        const analysisRef = db.ref(`users/${user.uid}/analyses`);
+        const newAnalysisRef = analysisRef.push();
+        
+        const analysis = {
+            ...analysisData,
+            id: newAnalysisRef.key,
+            userId: user.uid,
+            createdAt: Date.now()
         };
 
-        const analysisRef = database.ref(`analyses/${user.uid}`).push();
-        await analysisRef.set(cleanedData);
-
-        showToast('Analysis saved successfully!');
+        await newAnalysisRef.set(analysis);
+        showToast('Analysis saved successfully!', 'success');
+        return analysis.id;
     } catch (error) {
         console.error('Error saving analysis:', error);
         showToast('Error saving analysis. Please try again.', 'danger');
@@ -232,16 +199,12 @@ async function saveAnalysis(analysisData) {
 // Get saved analyses for current user
 async function getSavedAnalyses() {
     try {
-        if (!auth || !database) {
-            throw new Error('Firebase not initialized');
-        }
-
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to view analyses');
         }
 
-        const snapshot = await database.ref(`analyses/${user.uid}`).once('value');
+        const snapshot = await db.ref(`users/${user.uid}/analyses`).once('value');
         const analyses = [];
         
         snapshot.forEach((childSnapshot) => {
@@ -251,28 +214,30 @@ async function getSavedAnalyses() {
             });
         });
 
+        // Sort by creation date, newest first
         return analyses.sort((a, b) => b.createdAt - a.createdAt);
     } catch (error) {
         console.error('Error getting analyses:', error);
         showToast('Error loading analyses. Please try again.', 'danger');
-        throw error;
+        return [];
     }
 }
 
 // Delete analysis
 async function deleteAnalysis(analysisId) {
     try {
-        if (!auth || !database) {
-            throw new Error('Firebase not initialized');
-        }
-
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to delete analyses');
         }
 
-        await database.ref(`analyses/${user.uid}/${analysisId}`).remove();
-        showToast('Analysis deleted successfully!');
+        await db.ref(`users/${user.uid}/analyses/${analysisId}`).remove();
+        showToast('Analysis deleted successfully!', 'success');
+        
+        // Reload analyses list if on history page
+        if (window.location.pathname.includes('history.html')) {
+            loadAnalyses();
+        }
     } catch (error) {
         console.error('Error deleting analysis:', error);
         showToast('Error deleting analysis. Please try again.', 'danger');
@@ -286,8 +251,8 @@ function showToast(message, type = 'success') {
     const toastMessage = document.getElementById('toastMessage');
     if (toast && toastMessage) {
         toastMessage.textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
-        toast.classList.add(`bg-${type}`);
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
         new bootstrap.Toast(toast).show();
     }
 }
@@ -304,4 +269,30 @@ async function resetPassword(email) {
         showToast(error.message, 'danger');
         throw error;
     }
+}
+
+// Theme toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            this.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
+        });
+    }
+});
+
+// Initialize Firebase when the page loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', async () => {
+        const initialized = await initializeFirebase();
+        if (!initialized) {
+            console.error('Failed to initialize Firebase');
+        }
+    });
+} else {
+    initializeFirebase();
 } 
