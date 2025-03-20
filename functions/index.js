@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const cors = require('cors')({ 
-    origin: true, // Allow all origins for now
+    origin: ['https://taheralsharif.github.io', 'http://localhost:5000'],
     methods: ['POST', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -11,18 +11,21 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin
 admin.initializeApp();
 
-// Initialize Groq client
+// Initialize Groq client with environment variable
 const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY
+    apiKey: functions.config().groq.api_key
 });
 
 exports.getAIAnalysis = functions.https.onRequest((request, response) => {
+    // Set CORS headers for all responses
+    response.set('Access-Control-Allow-Origin', 'https://taheralsharif.github.io');
+    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.set('Access-Control-Allow-Credentials', 'true');
+    response.set('Access-Control-Max-Age', '3600');
+
     // Handle preflight requests
     if (request.method === 'OPTIONS') {
-        response.set('Access-Control-Allow-Origin', '*');
-        response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-        response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        response.set('Access-Control-Max-Age', '3600');
         response.status(204).send('');
         return;
     }
@@ -91,8 +94,6 @@ exports.getAIAnalysis = functions.https.onRequest((request, response) => {
 
             const analysis = completion.choices[0]?.message?.content || 'No analysis available';
 
-            // Set CORS headers for the response
-            response.set('Access-Control-Allow-Origin', '*');
             response.status(200).json({ analysis });
         } catch (error) {
             console.error('Error in getAIAnalysis:', error);
