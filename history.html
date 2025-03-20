@@ -176,35 +176,45 @@
             return 'risk-high';
         }
 
-        // Check authentication state
-        auth.onAuthStateChanged((user) => {
-            const userDropdown = document.getElementById('userDropdown');
-            const loginButton = document.getElementById('loginButton');
-            
-            if (user) {
-                // User is signed in
-                userDropdown.classList.remove('d-none');
-                loginButton.classList.add('d-none');
-                document.getElementById('userName').textContent = user.displayName || user.email;
+        // Wait for Firebase to initialize before checking auth state
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await initializeFirebase();
                 
-                // Load analyses
-                loadAnalyses();
-                
-                // Handle logout
-                document.getElementById('logoutLink').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    auth.signOut().then(() => {
+                // Check authentication state
+                auth.onAuthStateChanged((user) => {
+                    const userDropdown = document.getElementById('userDropdown');
+                    const loginButton = document.getElementById('loginButton');
+                    
+                    if (user) {
+                        // User is signed in
+                        userDropdown.classList.remove('d-none');
+                        loginButton.classList.add('d-none');
+                        document.getElementById('userName').textContent = user.displayName || user.email;
+                        
+                        // Load analyses
+                        loadAnalyses();
+                        
+                        // Handle logout
+                        document.getElementById('logoutLink').addEventListener('click', (e) => {
+                            e.preventDefault();
+                            auth.signOut().then(() => {
+                                window.location.href = 'login.html';
+                            }).catch((error) => {
+                                console.error('Error signing out:', error);
+                            });
+                        });
+                    } else {
+                        // User is signed out
+                        userDropdown.classList.add('d-none');
+                        loginButton.classList.remove('d-none');
+                        document.getElementById('userName').textContent = 'User';
                         window.location.href = 'login.html';
-                    }).catch((error) => {
-                        console.error('Error signing out:', error);
-                    });
+                    }
                 });
-            } else {
-                // User is signed out
-                userDropdown.classList.add('d-none');
-                loginButton.classList.remove('d-none');
-                document.getElementById('userName').textContent = 'User';
-                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error initializing Firebase:', error);
+                showToast('Error initializing application. Please refresh the page.', 'danger');
             }
         });
     </script>

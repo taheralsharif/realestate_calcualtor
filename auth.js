@@ -13,7 +13,7 @@ const firebaseConfig = {
 // Initialize Firebase
 let firebaseApp;
 let auth;
-let database;
+let db;
 
 // Initialize Firebase with retry mechanism
 async function initializeFirebase() {
@@ -29,7 +29,7 @@ async function initializeFirebase() {
 
         // Initialize Auth and Database
         auth = firebase.auth();
-        database = firebase.database();
+        db = firebase.database();
 
         // Set up auth state listener
         auth.onAuthStateChanged((user) => {
@@ -165,9 +165,6 @@ function updateUserProfile(user) {
     }
 }
 
-// Initialize Firebase Realtime Database
-const db = firebase.database();
-
 // Save analysis to database
 async function saveAnalysis(analysisData) {
     try {
@@ -286,13 +283,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Initialize Firebase when the page loads
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', async () => {
-        const initialized = await initializeFirebase();
-        if (!initialized) {
-            console.error('Failed to initialize Firebase');
-        }
-    });
-} else {
-    initializeFirebase();
-} 
+document.addEventListener('DOMContentLoaded', async () => {
+    const initialized = await initializeFirebase();
+    if (!initialized) {
+        console.error('Failed to initialize Firebase');
+    }
+}); 
