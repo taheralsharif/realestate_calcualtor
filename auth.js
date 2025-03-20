@@ -10,15 +10,25 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+let firebaseApp;
+let auth;
+let db;
+
+try {
+    if (!firebase.apps.length) {
+        firebaseApp = firebase.initializeApp(firebaseConfig);
+    } else {
+        firebaseApp = firebase.app();
+    }
+
+    // Initialize Firestore
+    db = firebase.firestore();
+
+    // Initialize Auth
+    auth = firebase.auth();
+} catch (error) {
+    console.error('Firebase initialization error:', error);
 }
-
-// Initialize Firestore
-const db = firebase.firestore();
-
-// Initialize Auth
-const auth = firebase.auth();
 
 // Theme toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
@@ -76,6 +86,10 @@ function updateUserProfile(user) {
 // Save analysis to Firestore
 async function saveAnalysis(analysisData) {
     try {
+        if (!auth || !db) {
+            throw new Error('Firebase not initialized');
+        }
+
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to save analyses');
@@ -100,6 +114,10 @@ async function saveAnalysis(analysisData) {
 // Get saved analyses for current user
 async function getSavedAnalyses() {
     try {
+        if (!auth || !db) {
+            throw new Error('Firebase not initialized');
+        }
+
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to view analyses');
@@ -124,6 +142,10 @@ async function getSavedAnalyses() {
 // Delete analysis
 async function deleteAnalysis(analysisId) {
     try {
+        if (!auth || !db) {
+            throw new Error('Firebase not initialized');
+        }
+
         const user = auth.currentUser;
         if (!user) {
             throw new Error('User must be logged in to delete analyses');
@@ -139,9 +161,11 @@ async function deleteAnalysis(analysisId) {
 }
 
 // Initialize Firebase Auth state listener
-auth.onAuthStateChanged((user) => {
-    updateUserProfile(user);
-});
+if (auth) {
+    auth.onAuthStateChanged((user) => {
+        updateUserProfile(user);
+    });
+}
 
 // Show toast notification
 function showToast(message, type = 'success') {
@@ -158,6 +182,9 @@ function showToast(message, type = 'success') {
 // Password Reset Function
 async function resetPassword(email) {
     try {
+        if (!auth) {
+            throw new Error('Firebase not initialized');
+        }
         await auth.sendPasswordResetEmail(email);
         showToast('Password reset email sent! Please check your inbox.');
     } catch (error) {
@@ -174,6 +201,9 @@ if (document.getElementById('loginForm')) {
         const password = document.getElementById('password').value;
 
         try {
+            if (!auth) {
+                throw new Error('Firebase not initialized');
+            }
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             if (!userCredential.user.emailVerified) {
                 showToast('Please verify your email address before logging in.', 'danger');
@@ -195,6 +225,9 @@ if (document.getElementById('signupForm')) {
         const password = document.getElementById('signupPassword').value;
 
         try {
+            if (!auth) {
+                throw new Error('Firebase not initialized');
+            }
             await auth.createUserWithEmailAndPassword(email, password);
             // Send email verification
             await auth.currentUser.sendEmailVerification();
@@ -210,6 +243,9 @@ if (document.getElementById('signupForm')) {
 if (document.getElementById('googleLoginBtn')) {
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         try {
+            if (!auth) {
+                throw new Error('Firebase not initialized');
+            }
             const provider = new firebase.auth.GoogleAuthProvider();
             await auth.signInWithPopup(provider);
             showToast('Successfully logged in with Google!');
