@@ -1,61 +1,112 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyAKe-KasTD0HDzAwVr-sjkghK5VUYd61jE",
-    authDomain: "real-estate-calculator-3212e.firebaseapp.com",
-    projectId: "real-estate-calculator-3212e",
-    storageBucket: "real-estate-calculator-3212e.firebasestorage.app",
-    messagingSenderId: "683636020205",
-    appId: "1:683636020205:web:0c237b8b5a823d11604de4",
-    measurementId: "G-2QVFVLJ4GY"
+    apiKey: "AIzaSyDxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx",
+    authDomain: "realestate-calculator.firebaseapp.com",
+    projectId: "realestate-calculator",
+    storageBucket: "realestate-calculator.appspot.com",
+    messagingSenderId: "123456789012",
+    appId: "1:123456789012:web:abcdef1234567890"
 };
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+
+// Initialize Firestore
 const db = firebase.firestore();
 
-// Show toast notification
-function showToast(message, type = 'success') {
-    const toast = document.querySelector('.toast');
-    const toastMessage = document.getElementById('toastMessage');
-    if (toast && toastMessage) {
-        toastMessage.textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger');
-        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        new bootstrap.Toast(toast).show();
+// Initialize Auth
+const auth = firebase.auth();
+
+// Theme toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            this.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
+        });
     }
-}
+});
+
+// Check authentication state
+auth.onAuthStateChanged((user) => {
+    const userDropdown = document.getElementById('userDropdown');
+    const loginButton = document.getElementById('loginButton');
+    const userName = document.getElementById('userName');
+    const userMenuButton = document.getElementById('userMenuButton');
+    const logoutLink = document.getElementById('logoutLink');
+
+    if (user) {
+        // User is signed in
+        if (userDropdown) userDropdown.classList.remove('d-none');
+        if (loginButton) loginButton.classList.add('d-none');
+        if (userName) userName.textContent = user.displayName || user.email;
+        if (userMenuButton) {
+            userMenuButton.innerHTML = `
+                <i class="bi bi-person-circle me-2"></i>
+                <span>${user.displayName || user.email}</span>
+            `;
+        }
+        if (logoutLink) {
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
+                }).catch((error) => {
+                    console.error('Error signing out:', error);
+                });
+            });
+        }
+    } else {
+        // User is signed out
+        if (userDropdown) userDropdown.classList.add('d-none');
+        if (loginButton) loginButton.classList.remove('d-none');
+        if (userName) userName.textContent = 'User';
+        if (userMenuButton) {
+            userMenuButton.innerHTML = `
+                <i class="bi bi-person-circle me-2"></i>
+                <span>User</span>
+            `;
+        }
+    }
+});
 
 // Save analysis to Firestore
 async function saveAnalysis(analysisData) {
     try {
-        if (!auth.currentUser) {
-            showToast('Please log in to save your analysis', 'danger');
-            return;
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
         }
 
         const analysis = {
             ...analysisData,
-            userId: auth.currentUser.uid,
+            userId: user.uid,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            propertyName: analysisData.propertyName || 'Unnamed Property'
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         };
 
-        await db.collection('analyses').add(analysis);
-        showToast('Analysis saved successfully!');
+        const docRef = await db.collection('analyses').add(analysis);
+        return docRef.id;
     } catch (error) {
         console.error('Error saving analysis:', error);
-        showToast('Error saving analysis. Please try again.', 'danger');
+        throw error;
     }
 }
 
-// Get user's saved analyses
+// Get saved analyses from Firestore
 async function getSavedAnalyses() {
     try {
-        if (!auth.currentUser) return [];
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
+        }
 
         const snapshot = await db.collection('analyses')
-            .where('userId', '==', auth.currentUser.uid)
+            .where('userId', '==', user.uid)
             .orderBy('createdAt', 'desc')
             .get();
 
@@ -65,24 +116,34 @@ async function getSavedAnalyses() {
         }));
     } catch (error) {
         console.error('Error getting analyses:', error);
-        showToast('Error loading analyses. Please try again.', 'danger');
-        return [];
+        throw error;
     }
 }
 
-// Delete analysis
+// Delete analysis from Firestore
 async function deleteAnalysis(analysisId) {
     try {
-        if (!auth.currentUser) {
-            showToast('Please log in to delete analyses', 'danger');
-            return;
+        const user = auth.currentUser;
+        if (!user) {
+            throw new Error('User not authenticated');
         }
 
         await db.collection('analyses').doc(analysisId).delete();
-        showToast('Analysis deleted successfully!');
     } catch (error) {
         console.error('Error deleting analysis:', error);
-        showToast('Error deleting analysis. Please try again.', 'danger');
+        throw error;
+    }
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toast = document.querySelector('.toast');
+    const toastMessage = document.getElementById('toastMessage');
+    if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+        toast.classList.add(`bg-${type}`);
+        new bootstrap.Toast(toast).show();
     }
 }
 
@@ -153,61 +214,4 @@ if (document.getElementById('googleLoginBtn')) {
             showToast('Error logging in with Google: ' + error.message, 'error');
         }
     });
-}
-
-// Update user profile in navigation
-function updateUserProfile(user) {
-    const userDropdown = document.getElementById('userDropdown');
-    const loginButton = document.getElementById('loginButton');
-    const userName = document.getElementById('userName');
-    const userPhoto = document.getElementById('userPhoto');
-
-    if (user) {
-        // User is signed in
-        if (userDropdown) userDropdown.classList.remove('d-none');
-        if (loginButton) loginButton.classList.add('d-none');
-        
-        // Update user name
-        if (userName) userName.textContent = user.displayName || 'User';
-        
-        // Update user photo
-        if (userPhoto && user.photoURL) {
-            userPhoto.src = user.photoURL;
-        }
-        
-        // Add welcome message to the page
-        const welcomeMessage = document.createElement('div');
-        welcomeMessage.className = 'alert alert-success alert-dismissible fade show mt-3';
-        welcomeMessage.innerHTML = `
-            Welcome back, ${user.displayName || 'User'}! 
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        const container = document.querySelector('.container');
-        if (container) {
-            container.insertBefore(welcomeMessage, container.firstChild);
-        }
-    } else {
-        // User is signed out
-        if (userDropdown) userDropdown.classList.add('d-none');
-        if (loginButton) loginButton.classList.remove('d-none');
-    }
-}
-
-// Check authentication state
-auth.onAuthStateChanged((user) => {
-    updateUserProfile(user);
-    
-    // Handle logout
-    const logoutLink = document.getElementById('logoutLink');
-    if (logoutLink) {
-        logoutLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            auth.signOut().then(() => {
-                window.location.href = 'login.html';
-            }).catch((error) => {
-                console.error('Error signing out:', error);
-                showToast('Error signing out. Please try again.', 'danger');
-            });
-        });
-    }
-}); 
+} 

@@ -130,6 +130,7 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="auth.js"></script>
     <script>
         // Check authentication
@@ -157,7 +158,7 @@
             const analysesList = document.getElementById('analysesList');
             const noResults = document.getElementById('noResults');
             
-            if (analyses.length === 0) {
+            if (!analyses || analyses.length === 0) {
                 analysesList.innerHTML = '';
                 noResults.classList.remove('d-none');
                 return;
@@ -167,10 +168,10 @@
             analysesList.innerHTML = analyses.map(analysis => `
                 <div class="list-group-item list-group-item-action">
                     <div class="d-flex w-100 justify-content-between align-items-center">
-                        <h5 class="mb-1">${analysis.propertyName}</h5>
+                        <h5 class="mb-1">${analysis.propertyName || 'Unnamed Property'}</h5>
                         <small class="text-muted">${new Date(analysis.createdAt?.toDate()).toLocaleDateString()}</small>
                     </div>
-                    <p class="mb-1">Monthly Profit: $${analysis.monthlyProfit}</p>
+                    <p class="mb-1">Monthly Profit: $${analysis.monthlyProfit?.toFixed(2) || '0.00'}</p>
                     <div class="btn-group">
                         <button class="btn btn-sm btn-outline-primary" onclick="viewAnalysis('${analysis.id}')">
                             <i class="bi bi-eye me-1"></i>View
@@ -230,6 +231,7 @@
                 try {
                     await deleteAnalysis(analysisId);
                     loadAnalyses();
+                    showToast('Analysis deleted successfully!');
                 } catch (error) {
                     console.error('Error deleting analysis:', error);
                     showToast('Error deleting analysis. Please try again.', 'danger');
