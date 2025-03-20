@@ -10,7 +10,9 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 
 // Initialize Firestore
 const db = firebase.firestore();
@@ -207,15 +209,12 @@ if (document.getElementById('googleLoginBtn')) {
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
         try {
             const provider = new firebase.auth.GoogleAuthProvider();
-            const result = await firebase.auth().signInWithPopup(provider);
-            if (result.user) {
-                showToast('Successfully logged in with Google!');
-                // Redirect to calculator page after successful login
-                window.location.href = 'calculator.html';
-            }
+            await auth.signInWithPopup(provider);
+            showToast('Successfully logged in with Google!');
+            window.location.href = 'calculator.html';
         } catch (error) {
             console.error('Google login error:', error);
-            showToast('Error logging in with Google: ' + error.message, 'error');
+            showToast('Error logging in with Google: ' + error.message, 'danger');
         }
     });
 } 
