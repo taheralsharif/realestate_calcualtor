@@ -1,11 +1,12 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyDxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx",
-    authDomain: "realestate-calculator.firebaseapp.com",
-    projectId: "realestate-calculator",
-    storageBucket: "realestate-calculator.appspot.com",
-    messagingSenderId: "123456789012",
-    appId: "1:123456789012:web:abcdef1234567890"
+    apiKey: "AIzaSyAKe-KasTD0HDzAwVr-sjkghK5VUYd61jE",
+    authDomain: "real-estate-calculator-3212e.firebaseapp.com",
+    projectId: "real-estate-calculator-3212e",
+    storageBucket: "real-estate-calculator-3212e.firebasestorage.app",
+    messagingSenderId: "683636020205",
+    appId: "1:683636020205:web:0c237b8b5a823d11604de4",
+    measurementId: "G-2QVFVLJ4GY"
 };
 
 // Initialize Firebase
