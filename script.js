@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Add title
             doc.setFontSize(16);
-            doc.text('Real Estate Investment Analysis', 14, 15);
+            doc.text('RealSense Investment Analysis', 14, 15);
             doc.setFontSize(12);
             
             // Get the results table
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
             doc.text(analysis, 14, analysisY + 7);
             
             // Save the PDF
-            doc.save('real-estate-analysis.pdf');
+            doc.save('realsense-analysis.pdf');
             showToast('PDF downloaded successfully!', 'success');
         });
     }
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Create worksheet
             const ws = XLSX.utils.aoa_to_sheet([
-                ['Real Estate Investment Analysis'],
+                ['RealSense Investment Analysis'],
                 [''],
                 ['Metric', 'Value'],
                 ...rows
@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function() {
             XLSX.utils.book_append_sheet(wb, ws, 'Analysis');
             
             // Save the Excel file
-            XLSX.writeFile(wb, 'real-estate-analysis.xlsx');
+            XLSX.writeFile(wb, 'realsense-analysis.xlsx');
             showToast('Excel file downloaded successfully!', 'success');
         });
     }
