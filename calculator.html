@@ -80,7 +80,7 @@
                 <div class="card mb-4">
                     <div class="card-body">
                         <h5 class="card-title">Import Property Data from Zillow</h5>
-                        <form id="zillowForm" class="mb-3">
+                        <form id="zillowUrlForm" class="mb-3">
                             <div class="input-group">
                                 <input type="url" class="form-control" id="zillowUrl" 
                                        placeholder="Paste Zillow property URL here" required>
@@ -151,7 +151,7 @@
                             </div>
 
                             <!-- Estimated Rent Section -->
-                            <div id="estimatedRentSection" class="row d-none">
+                            <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="estimatedRent" class="form-label">Estimated Monthly Rent</label>
                                     <div class="input-group">
@@ -160,8 +160,8 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6 mb-3 d-flex align-items-end">
-                                    <button type="button" class="btn btn-primary" id="aiAnalysisButton">
-                                        <i class="bi bi-robot me-2"></i>Get AI Analysis
+                                    <button type="button" class="btn btn-primary" id="analyzeWithAI">
+                                        <i class="bi bi-robot me-2"></i>Analyze with AI
                                     </button>
                                 </div>
                             </div>
@@ -217,28 +217,8 @@
                     </div>
                 </div>
 
-                <!-- AI Analysis Section -->
-                <div id="aiAnalysisSection" class="card mb-4 d-none">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="card-title mb-0">AI Investment Analysis</h5>
-                            <button class="btn btn-success" onclick="saveAIAnalysis()">
-                                <i class="bi bi-save me-2"></i>Save Analysis
-                            </button>
-                        </div>
-                        <div id="aiAnalysisContent"></div>
-                    </div>
-                </div>
-
-                <!-- Add this after the form -->
-                <div class="d-grid gap-2 mt-4" id="aiAnalysisSection" style="display: none;">
-                    <button type="button" class="btn btn-primary" id="analyzeWithAI">
-                        <i class="bi bi-robot"></i> Analyze with AI
-                    </button>
-                </div>
-
-                <!-- Add this in the results section -->
-                <div class="card mt-4" id="aiAnalysisCard" style="display: none;">
+                <!-- AI Analysis Results -->
+                <div id="aiAnalysisCard" class="card mb-4 d-none">
                     <div class="card-header">
                         <h5 class="card-title mb-0">
                             <i class="bi bi-robot"></i> AI Investment Analysis
@@ -337,7 +317,7 @@
         });
 
         // Handle Zillow URL submission
-        async function handleZillowUrlSubmit(e) {
+        document.getElementById('zillowUrlForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const urlInput = document.getElementById('zillowUrl');
             const importButton = document.getElementById('importButton');
@@ -345,85 +325,68 @@
             const url = urlInput.value.trim();
             
             if (!url) {
-                showToast('Please enter a Zillow URL', 'danger');
+                showToast('Please enter a valid Zillow URL', 'error');
                 return;
             }
 
             try {
-                // Show loading state
                 importButton.disabled = true;
                 importLoading.classList.remove('d-none');
                 
                 const propertyData = await extractZillowData(url);
-                
-                // Populate the calculator form with Zillow data
                 populateCalculatorForm(propertyData);
                 
-                // Show the estimated rent input
-                const estimatedRentSection = document.getElementById('estimatedRentSection');
-                if (estimatedRentSection) {
-                    estimatedRentSection.classList.remove('d-none');
-                }
-                
-                showToast('Property data extracted successfully!', 'success');
+                showToast('Property data imported successfully!', 'success');
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Failed to extract property data. Please try again.', 'danger');
+                showToast(error.message, 'error');
             } finally {
-                // Hide loading state
                 importButton.disabled = false;
                 importLoading.classList.add('d-none');
             }
-        }
+        });
 
         // Handle AI analysis
-        async function handleAIAnalysis(e) {
-            e.preventDefault();
-            const aiAnalysisButton = document.getElementById('aiAnalysisButton');
+        document.getElementById('analyzeWithAI').addEventListener('click', async function() {
+            const form = document.getElementById('calculatorForm');
+            const formData = new FormData(form);
             const aiAnalysisLoading = document.getElementById('aiAnalysisLoading');
-            const formData = new FormData(document.getElementById('calculatorForm'));
+            const analyzeButton = document.getElementById('analyzeWithAI');
+            
             const propertyData = {
-                price: Number(formData.get('propertyPrice')),
-                beds: Number(formData.get('beds')),
-                baths: Number(formData.get('baths')),
-                sqft: Number(formData.get('sqft')),
-                address: formData.get('propertyName'),
-                yearBuilt: Number(formData.get('yearBuilt')),
-                propertyType: formData.get('propertyType')
+                price: parseFloat(formData.get('propertyPrice')),
+                beds: parseInt(formData.get('beds')),
+                baths: parseInt(formData.get('baths')),
+                sqft: parseInt(formData.get('sqft')),
+                yearBuilt: parseInt(formData.get('yearBuilt')),
+                propertyType: formData.get('propertyType'),
+                address: formData.get('propertyName')
             };
             
-            const estimatedRent = Number(formData.get('estimatedRent'));
+            const estimatedRent = parseFloat(formData.get('estimatedRent'));
             
             if (!estimatedRent) {
-                showToast('Please enter an estimated monthly rent', 'danger');
+                showToast('Please enter an estimated monthly rent', 'error');
                 return;
             }
 
             try {
-                // Show loading state
-                aiAnalysisButton.disabled = true;
+                analyzeButton.disabled = true;
                 aiAnalysisLoading.classList.remove('d-none');
                 
                 const analysis = await getAIAnalysis(propertyData, estimatedRent);
-                
-                // Display the AI analysis
-                const aiAnalysisSection = document.getElementById('aiAnalysisSection');
-                const aiAnalysisContent = document.getElementById('aiAnalysisContent');
-                if (aiAnalysisSection && aiAnalysisContent) {
-                    aiAnalysisContent.innerHTML = analysis.replace(/\n/g, '<br>');
-                    aiAnalysisSection.classList.remove('d-none');
-                }
+                document.getElementById('aiAnalysisContent').innerHTML = analysis.replace(/\n/g, '<br>');
+                document.getElementById('aiAnalysisCard').classList.remove('d-none');
                 
                 showToast('AI analysis completed!', 'success');
             } catch (error) {
                 console.error('Error:', error);
-                showToast('Failed to get AI analysis. Please try again.', 'danger');
+                showToast(error.message, 'error');
             } finally {
-                // Hide loading state
-                aiAnalysisButton.disabled = false;
+                analyzeButton.disabled = false;
                 aiAnalysisLoading.classList.add('d-none');
             }
-        }
+        });
 
         // Save current analysis
         async function saveCurrentAnalysis() {
@@ -490,71 +453,6 @@
                 showToast('Error saving AI analysis', 'danger');
             }
         }
-
-        // Add event listeners
-        const zillowForm = document.getElementById('zillowForm');
-        if (zillowForm) {
-            zillowForm.addEventListener('submit', handleZillowUrlSubmit);
-        }
-
-        const aiAnalysisButton = document.getElementById('aiAnalysisButton');
-        if (aiAnalysisButton) {
-            aiAnalysisButton.addEventListener('click', handleAIAnalysis);
-        }
-
-        // Update the Zillow URL form handler
-        document.getElementById('zillowUrlForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const urlInput = document.getElementById('zillowUrl');
-            const url = urlInput.value.trim();
-            
-            if (!url) {
-                showToast('Please enter a valid Zillow URL', 'error');
-                return;
-            }
-
-            try {
-                const propertyData = await extractZillowData(url);
-                populateCalculatorForm(propertyData);
-                showToast('Property data imported successfully!', 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showToast(error.message, 'error');
-            }
-        });
-
-        // Update the AI analysis handler
-        document.getElementById('analyzeWithAI').addEventListener('click', async function() {
-            const form = document.getElementById('calculatorForm');
-            const formData = new FormData(form);
-            
-            const propertyData = {
-                price: parseFloat(formData.get('propertyPrice')),
-                beds: parseInt(formData.get('beds')),
-                baths: parseInt(formData.get('baths')),
-                sqft: parseInt(formData.get('sqft')),
-                yearBuilt: parseInt(formData.get('yearBuilt')),
-                propertyType: formData.get('propertyType'),
-                address: formData.get('propertyName')
-            };
-            
-            const estimatedRent = parseFloat(formData.get('estimatedRent'));
-            
-            if (!estimatedRent) {
-                showToast('Please enter an estimated monthly rent', 'error');
-                return;
-            }
-
-            try {
-                const analysis = await getAIAnalysis(propertyData, estimatedRent);
-                document.getElementById('aiAnalysisContent').innerHTML = analysis.replace(/\n/g, '<br>');
-                document.getElementById('aiAnalysisCard').style.display = 'block';
-                showToast('AI analysis completed!', 'success');
-            } catch (error) {
-                console.error('Error:', error);
-                showToast(error.message, 'error');
-            }
-        });
     </script>
 </body>
 </html> 
