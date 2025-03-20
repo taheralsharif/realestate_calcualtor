@@ -92,52 +92,74 @@ function calculateInvestment(data) {
 
 function displayResults(results) {
     const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = `
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <tbody>
-                    <tr>
-                        <td>Monthly Mortgage Payment</td>
-                        <td class="text-end">$${results.monthlyMortgage.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Expenses</td>
-                        <td class="text-end">$${results.monthlyExpenses.toFixed(2)}</td>
-                    </tr>
-                    <tr class="table-primary">
-                        <td>Total Monthly Costs</td>
-                        <td class="text-end">$${results.totalMonthlyCosts.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                        <td>Monthly Rental Income</td>
-                        <td class="text-end">$${results.monthlyRent.toFixed(2)}</td>
-                    </tr>
-                    <tr class="${parseFloat(results.monthlyProfitLoss) >= 0 ? 'table-success' : 'table-danger'}">
-                        <td>Monthly Profit/Loss</td>
-                        <td class="text-end">$${results.monthlyProfitLoss.toFixed(2)}</td>
-                    </tr>
-                    <tr class="${parseFloat(results.annualProfitLoss) >= 0 ? 'table-success' : 'table-danger'}">
-                        <td>Annual Profit/Loss</td>
-                        <td class="text-end">$${results.annualProfitLoss.toFixed(2)}</td>
-                    </tr>
-                    <tr>
-                        <td>Cash-on-Cash Return</td>
-                        <td class="text-end">${results.cashOnCashReturn.toFixed(2)}%</td>
-                    </tr>
-                    <tr>
-                        <td>Break-even Period</td>
-                        <td class="text-end">${results.breakEvenPeriod.toFixed(1)} months</td>
-                    </tr>
-                    <tr>
-                        <td>DSCR</td>
-                        <td class="text-end">${results.dscr.toFixed(2)}</td>
-                    </tr>
-                </tbody>
-            </table>
+    if (!resultsDiv) return; // Exit if results div not found
+
+    // Store results globally
+    window.currentResults = results;
+
+    // Format numbers for display
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
+    };
+
+    const formatPercent = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }).format(value / 100);
+    };
+
+    // Create results HTML
+    const resultsHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Investment Analysis Results</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Monthly Analysis</h6>
+                        <p><strong>Monthly Mortgage Payment:</strong> ${formatCurrency(results.monthlyMortgage)}</p>
+                        <p><strong>Total Monthly Costs:</strong> ${formatCurrency(results.totalMonthlyCosts)}</p>
+                        <p><strong>Monthly Profit/Loss:</strong> 
+                            <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatCurrency(results.monthlyProfitLoss)}
+                            </span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="mb-3">Annual Analysis</h6>
+                        <p><strong>Annual Profit/Loss:</strong> 
+                            <span class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                                ${formatCurrency(results.annualProfitLoss)}
+                            </span>
+                        </p>
+                        <p><strong>Cash-on-Cash Return:</strong> ${formatPercent(results.cashOnCashReturn)}</p>
+                        <p><strong>DSCR:</strong> ${results.dscr.toFixed(2)}</p>
+                        <p><strong>Break-even Period:</strong> ${results.breakEvenPeriod.toFixed(1)} years</p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="mb-2">Investment Verdict</h6>
+                    <p class="${results.annualProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
+                        ${results.annualProfitLoss >= 0 ? 'Good Investment' : 'Poor Investment'}
+                    </p>
+                </div>
+            </div>
         </div>
     `;
-    
-    // Add save button after displaying results
+
+    // Update results div
+    resultsDiv.innerHTML = resultsHTML;
+    resultsDiv.classList.remove('d-none');
+
+    // Add save button
     addSaveButton();
 }
 
@@ -283,19 +305,25 @@ function generateInvestmentAnalysis(results) {
 // Store results globally for download functions
 let results = null;
 
-// Add save button to results
+// Function to add save button to results
 function addSaveButton() {
-    const resultsCard = document.getElementById('resultsCard');
-    const existingSaveBtn = document.getElementById('saveAnalysisBtn');
-    
-    if (!existingSaveBtn) {
-        const saveBtn = document.createElement('button');
-        saveBtn.id = 'saveAnalysisBtn';
-        saveBtn.className = 'btn btn-success mt-3';
-        saveBtn.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
-        saveBtn.onclick = saveCurrentAnalysis;
-        resultsCard.appendChild(saveBtn);
+    const resultsCard = document.querySelector('#results .card-body');
+    if (!resultsCard) return; // Exit if results card not found
+
+    // Remove existing save button if it exists
+    const existingButton = resultsCard.querySelector('.save-analysis-btn');
+    if (existingButton) {
+        existingButton.remove();
     }
+
+    // Create new save button
+    const saveButton = document.createElement('button');
+    saveButton.className = 'btn btn-success save-analysis-btn';
+    saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
+    saveButton.onclick = saveCurrentAnalysis;
+    
+    // Add button to results card
+    resultsCard.appendChild(saveButton);
 }
 
 // Save current analysis
