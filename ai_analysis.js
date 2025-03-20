@@ -2,63 +2,64 @@
 const GROQ_API_KEY = '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';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 
-// Function to get AI analysis using Firebase Cloud Functions
+// Function to get AI analysis
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
-        // Validate input data
-        if (!propertyData || !estimatedRent) {
-            throw new Error('Missing required property data or estimated rent');
+        // Get the current user's ID token
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('User must be logged in to get AI analysis');
         }
 
-        // Ensure all numeric values are valid
-        const validatedData = {
-            price: Number(propertyData.price) || 0,
-            beds: Number(propertyData.beds) || 0,
-            baths: Number(propertyData.baths) || 0,
-            sqft: Number(propertyData.sqft) || 0,
-            yearBuilt: Number(propertyData.yearBuilt) || 0,
-            propertyType: propertyData.propertyType || 'Unknown',
-            address: propertyData.address || 'Unknown Address'
-        };
+        const idToken = await user.getIdToken();
 
-        // Get the Firebase Functions instance
-        const getAIAnalysisFunction = firebase.functions().httpsCallable('getAIAnalysis');
-        
-        // Call the Cloud Function with validated data
-        const result = await getAIAnalysisFunction({
-            propertyData: validatedData,
-            estimatedRent: Number(estimatedRent) || 0
+        // Make the request to the Cloud Function
+        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/getAIAnalysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                propertyData,
+                estimatedRent
+            })
         });
-        
-        return result.data.analysis;
+
+        if (!response.ok) {
+            throw new Error('Failed to get AI analysis');
+        }
+
+        const data = await response.json();
+        return data.analysis;
     } catch (error) {
         console.error('Error getting AI analysis:', error);
-        throw new Error('Failed to get AI analysis. Please try again later.');
+        throw error;
     }
 }
 
 // Function to extract data from Zillow URL
 async function extractZillowData(url) {
     try {
-        // Basic validation for Zillow URL
+        // Validate URL
         if (!url.includes('zillow.com')) {
             throw new Error('Please enter a valid Zillow URL');
         }
 
-        // For now, we'll return a placeholder object
-        // In a real implementation, you would use Zillow's API or a proper scraping service
+        // For now, return placeholder data
+        // In a real implementation, you would scrape the Zillow page or use their API
         return {
-            price: 0,
-            beds: 0,
-            baths: 0,
-            sqft: 0,
-            yearBuilt: 0,
+            price: 500000,
+            beds: 3,
+            baths: 2,
+            sqft: 2000,
+            yearBuilt: 2020,
             propertyType: 'Single Family',
-            address: 'Please enter property details manually'
+            address: '123 Main St, City, State'
         };
     } catch (error) {
         console.error('Error extracting Zillow data:', error);
-        throw new Error('Please enter property details manually');
+        throw error;
     }
 }
 
@@ -108,25 +109,14 @@ function populateCalculatorForm(propertyData) {
     const form = document.getElementById('calculatorForm');
     if (!form) return;
 
-    // Populate form fields with property data
-    const fields = {
-        'propertyName': propertyData.address || '',
-        'propertyPrice': propertyData.price || '',
-        'beds': propertyData.beds || '',
-        'baths': propertyData.baths || '',
-        'sqft': propertyData.sqft || '',
-        'yearBuilt': propertyData.yearBuilt || '',
-        'propertyType': propertyData.propertyType || ''
-    };
-
-    for (const [fieldName, value] of Object.entries(fields)) {
-        const input = form.querySelector(`[name="${fieldName}"]`);
-        if (input) {
-            input.value = value;
-            // Trigger input event to update any dependent fields
-            input.dispatchEvent(new Event('input'));
-        }
-    }
+    // Update form fields with property data
+    form.querySelector('[name="propertyPrice"]').value = propertyData.price;
+    form.querySelector('[name="beds"]').value = propertyData.beds;
+    form.querySelector('[name="baths"]').value = propertyData.baths;
+    form.querySelector('[name="sqft"]').value = propertyData.sqft;
+    form.querySelector('[name="yearBuilt"]').value = propertyData.yearBuilt;
+    form.querySelector('[name="propertyType"]').value = propertyData.propertyType;
+    form.querySelector('[name="address"]').value = propertyData.address;
 }
 
 // Export functions

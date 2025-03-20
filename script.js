@@ -1,7 +1,10 @@
 // Theme toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('themeToggle');
+    if (!themeToggle) return; // Exit if theme toggle not found
+    
     const icon = themeToggle.querySelector('i');
+    if (!icon) return; // Exit if icon not found
     
     // Set initial icon
     updateThemeIcon();
