@@ -6,10 +6,10 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
         // Show loading state
-        const aiAnalysisButton = document.querySelector('#aiAnalysisButton');
-        const originalButtonText = aiAnalysisButton.innerHTML;
-        aiAnalysisButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
-        aiAnalysisButton.disabled = true;
+        const analyzeButton = document.getElementById('analyzeWithAI');
+        const originalButtonText = analyzeButton.innerHTML;
+        analyzeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
+        analyzeButton.disabled = true;
 
         // Validate input data
         if (!propertyData || typeof propertyData !== 'object') {
@@ -56,37 +56,24 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         }
 
         const result = await response.json();
-        
-        // Display the AI analysis result
-        const aiAnalysisResult = document.getElementById('aiAnalysisResult');
-        if (aiAnalysisResult) {
-            aiAnalysisResult.innerHTML = `
-                <div class="card mt-3">
-                    <div class="card-body">
-                        <h5 class="card-title">AI Analysis Results</h5>
-                        <div class="analysis-content">
-                            ${result.analysis}
-                        </div>
-                    </div>
-                </div>
-            `;
-            aiAnalysisResult.style.display = 'block';
-        }
-
-        // Show success message
-        showToast('AI analysis completed successfully', 'success');
-        return result;
+        return {
+            analysis: result.analysis || 'No analysis available',
+            success: true
+        };
 
     } catch (error) {
         console.error('AI Analysis error:', error);
         showToast(error.message || 'Failed to get AI analysis', 'danger');
-        throw error;
+        return {
+            analysis: 'Analysis failed: ' + error.message,
+            success: false
+        };
     } finally {
         // Reset button state
-        const aiAnalysisButton = document.querySelector('#aiAnalysisButton');
-        if (aiAnalysisButton) {
-            aiAnalysisButton.innerHTML = originalButtonText;
-            aiAnalysisButton.disabled = false;
+        const analyzeButton = document.getElementById('analyzeWithAI');
+        if (analyzeButton) {
+            analyzeButton.innerHTML = '<i class="bi bi-robot me-2"></i>Analyze with AI';
+            analyzeButton.disabled = false;
         }
     }
 }

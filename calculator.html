@@ -336,7 +336,7 @@
         async function initGoogleMaps() {
             try {
                 // Get the API key using Firebase callable function
-                const getGoogleMapsKey = window.firebaseServices.functions.httpsCallable('getGoogleMapsKey');
+                const getGoogleMapsKey = firebase.functions().httpsCallable('getGoogleMapsKey');
                 const result = await getGoogleMapsKey();
                 const apiKey = result.data.apiKey;
 
@@ -360,36 +360,37 @@
             }
         }
 
-        // Get Firebase services from the global object
-        const { auth, database } = window.firebaseServices || {};
+        // Wait for Firebase services to be initialized
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.firebaseServices && window.firebaseServices.auth) {
+                const { auth } = window.firebaseServices;
+                
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // User is signed in
+                        const userDropdown = document.getElementById('userDropdown');
+                        const loginButton = document.getElementById('loginButton');
+                        const userName = document.getElementById('userName');
 
-        // Check authentication state
-        if (auth) {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // User is signed in
-                    const userDropdown = document.getElementById('userDropdown');
-                    const loginButton = document.getElementById('loginButton');
-                    const userName = document.getElementById('userName');
-
-                    if (userDropdown && loginButton) {
-                        userDropdown.style.display = 'block';
-                        loginButton.style.display = 'none';
-                        if (userName) {
-                            userName.textContent = user.displayName || user.email;
+                        if (userDropdown && loginButton) {
+                            userDropdown.style.display = 'block';
+                            loginButton.style.display = 'none';
+                            if (userName) {
+                                userName.textContent = user.displayName || user.email;
+                            }
                         }
+                        // Initialize Google Maps after authentication
+                        initGoogleMaps();
+                    } else {
+                        // User is signed out
+                        window.location.replace('login.html');
                     }
-                    // Initialize Google Maps after authentication
-                    initGoogleMaps();
-                } else {
-                    // User is signed out
-                    window.location.replace('login.html');
-                }
-            });
-        } else {
-            console.error('Firebase Auth not initialized');
-            window.location.replace('login.html');
-        }
+                });
+            } else {
+                console.error('Firebase services not initialized');
+                window.location.replace('login.html');
+            }
+        });
 
         // Handle Zillow URL submission
         document.getElementById('zillowUrlForm').addEventListener('submit', async function(e) {
@@ -429,16 +430,16 @@
             const analyzeButton = document.getElementById('analyzeWithAI');
             
             const propertyData = {
-                price: parseFloat(formData.get('propertyPrice')),
-                beds: parseInt(formData.get('beds')),
-                baths: parseInt(formData.get('baths')),
-                sqft: parseInt(formData.get('sqft')),
-                yearBuilt: parseInt(formData.get('yearBuilt')),
-                propertyType: formData.get('propertyType'),
-                address: formData.get('propertyName')
+                price: parseFloat(document.getElementById('propertyPrice').value),
+                beds: parseInt(document.getElementById('beds').value),
+                baths: parseInt(document.getElementById('baths').value),
+                sqft: parseInt(document.getElementById('sqft').value),
+                yearBuilt: parseInt(document.getElementById('yearBuilt').value),
+                propertyType: document.getElementById('propertyType').value,
+                address: document.getElementById('address').value
             };
             
-            const estimatedRent = parseFloat(formData.get('estimatedRent'));
+            const estimatedRent = parseFloat(document.getElementById('estimatedRent').value);
             
             if (!estimatedRent) {
                 showToast('Please enter an estimated monthly rent', 'error');
@@ -450,8 +451,8 @@
                 aiAnalysisLoading.classList.remove('d-none');
                 
                 const analysis = await getAIAnalysis(propertyData, estimatedRent);
-                document.getElementById('aiAnalysisContent').innerHTML = analysis.replace(/\n/g, '<br>');
                 document.getElementById('aiAnalysisResults').classList.remove('d-none');
+                document.getElementById('aiAnalysisContent').innerHTML = analysis.analysis;
                 
                 showToast('AI analysis completed!', 'success');
             } catch (error) {
@@ -466,6 +467,7 @@
         // Save current analysis
         async function saveCurrentAnalysis() {
             try {
+                const { auth, database } = window.firebaseServices;
                 if (!auth || !auth.currentUser) {
                     showToast('Please log in to save analyses', 'danger');
                     return;
@@ -479,7 +481,8 @@
                     return;
                 }
 
-                const data = {
+                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
+                await analysisRef.set({
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
                     propertyPrice: Number(formData.get('propertyPrice')),
                     downPayment: Number(formData.get('downPayment')),
@@ -490,19 +493,23 @@
                     insurance: Number(formData.get('insurance')),
                     pmi: Number(formData.get('pmi')),
                     ...currentResults,
+                    id: analysisRef.key,
+                    userId: auth.currentUser.uid,
+                    createdAt: Date.now(),
                     type: 'calculator'
-                };
+                });
 
-                await saveAnalysis(data);
+                showToast('Analysis saved successfully!');
             } catch (error) {
                 console.error('Error saving analysis:', error);
-                showToast('Error saving analysis', 'danger');
+                showToast('Error saving analysis: ' + error.message, 'danger');
             }
         }
 
         // Save AI analysis
         async function saveAIAnalysis() {
             try {
+                const { auth, database } = window.firebaseServices;
                 if (!auth || !auth.currentUser) {
                     showToast('Please log in to save analyses', 'danger');
                     return;
@@ -516,88 +523,25 @@
                     return;
                 }
 
-                const data = {
+                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
+                await analysisRef.set({
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
                     propertyPrice: Number(formData.get('propertyPrice')),
                     estimatedRent: Number(formData.get('estimatedRent')),
                     insurance: Number(formData.get('insurance')),
                     pmi: Number(formData.get('pmi')),
                     aiAnalysis: aiAnalysisContent.innerHTML,
-                    type: 'ai'
-                };
-
-                await saveAnalysis(data);
-            } catch (error) {
-                console.error('Error saving AI analysis:', error);
-                showToast('Error saving AI analysis', 'danger');
-            }
-        }
-
-        // Save analysis function
-        async function saveAnalysis(analysisData) {
-            try {
-                if (!auth.currentUser) {
-                    showToast('Please sign in to save analyses', 'danger');
-                    return;
-                }
-
-                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
-                await analysisRef.set({
-                    ...analysisData,
                     id: analysisRef.key,
                     userId: auth.currentUser.uid,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    type: 'ai'
                 });
 
-                showToast('Analysis saved successfully!');
-                return analysisRef.key;
+                showToast('AI analysis saved successfully!');
             } catch (error) {
-                console.error('Error saving analysis:', error);
-                showToast('Error saving analysis: ' + error.message, 'danger');
-                throw error;
+                console.error('Error saving AI analysis:', error);
+                showToast('Error saving AI analysis: ' + error.message, 'danger');
             }
-        }
-
-        // Initialize Google Places Autocomplete
-        function initGooglePlaces() {
-            const addressInput = document.getElementById('address');
-            const autocomplete = new google.maps.places.Autocomplete(addressInput, {
-                types: ['address'],
-                componentRestrictions: { country: 'us' }
-            });
-
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                if (place.geometry) {
-                    // Update form fields with place details
-                    document.getElementById('propertyPrice').value = '';
-                    document.getElementById('propertyType').value = '';
-                    document.getElementById('beds').value = '';
-                    document.getElementById('baths').value = '';
-                    document.getElementById('sqft').value = '';
-                    document.getElementById('yearBuilt').value = '';
-                    document.getElementById('estimatedRent').value = '';
-
-                    // Get additional property details using Places API
-                    const service = new google.maps.places.PlacesService(document.createElement('div'));
-                    service.getDetails({
-                        placeId: place.place_id,
-                        fields: ['price_level', 'rating', 'reviews', 'formatted_address']
-                    }, (result, status) => {
-                        if (status === google.maps.places.PlacesServiceStatus.OK) {
-                            // Update form with available data
-                            if (result.price_level) {
-                                // Convert price level (0-4) to estimated price range
-                                const priceRanges = [0, 50000, 100000, 250000, 500000];
-                                document.getElementById('propertyPrice').value = priceRanges[result.price_level];
-                            }
-                            
-                            // Show success message
-                            showToast('Property details loaded from Google Places!', 'success');
-                        }
-                    });
-                }
-            });
         }
     </script>
 </body>
