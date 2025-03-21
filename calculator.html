@@ -467,8 +467,7 @@
         // Save current analysis
         async function saveCurrentAnalysis() {
             try {
-                const { auth, database } = window.firebaseServices;
-                if (!auth || !auth.currentUser) {
+                if (!window.firebaseServices?.auth?.currentUser) {
                     showToast('Please log in to save analyses', 'danger');
                     return;
                 }
@@ -481,7 +480,9 @@
                     return;
                 }
 
-                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
+                const userId = window.firebaseServices.auth.currentUser.uid;
+                const analysisRef = window.firebaseServices.database.ref(`users/${userId}/analyses`).push();
+                
                 await analysisRef.set({
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
                     propertyPrice: Number(formData.get('propertyPrice')),
@@ -494,12 +495,12 @@
                     pmi: Number(formData.get('pmi')),
                     ...currentResults,
                     id: analysisRef.key,
-                    userId: auth.currentUser.uid,
+                    userId: userId,
                     createdAt: Date.now(),
                     type: 'calculator'
                 });
 
-                showToast('Analysis saved successfully!');
+                showToast('Analysis saved successfully!', 'success');
             } catch (error) {
                 console.error('Error saving analysis:', error);
                 showToast('Error saving analysis: ' + error.message, 'danger');
@@ -509,8 +510,7 @@
         // Save AI analysis
         async function saveAIAnalysis() {
             try {
-                const { auth, database } = window.firebaseServices;
-                if (!auth || !auth.currentUser) {
+                if (!window.firebaseServices?.auth?.currentUser) {
                     showToast('Please log in to save analyses', 'danger');
                     return;
                 }
@@ -523,7 +523,9 @@
                     return;
                 }
 
-                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
+                const userId = window.firebaseServices.auth.currentUser.uid;
+                const analysisRef = window.firebaseServices.database.ref(`users/${userId}/analyses`).push();
+                
                 await analysisRef.set({
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
                     propertyPrice: Number(formData.get('propertyPrice')),
@@ -532,12 +534,12 @@
                     pmi: Number(formData.get('pmi')),
                     aiAnalysis: aiAnalysisContent.innerHTML,
                     id: analysisRef.key,
-                    userId: auth.currentUser.uid,
+                    userId: userId,
                     createdAt: Date.now(),
                     type: 'ai'
                 });
 
-                showToast('AI analysis saved successfully!');
+                showToast('AI analysis saved successfully!', 'success');
             } catch (error) {
                 console.error('Error saving AI analysis:', error);
                 showToast('Error saving AI analysis: ' + error.message, 'danger');

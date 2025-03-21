@@ -7,9 +7,10 @@ async function getAIAnalysis(propertyData, estimatedRent) {
     try {
         // Show loading state
         const analyzeButton = document.getElementById('analyzeWithAI');
-        const originalButtonText = analyzeButton.innerHTML;
-        analyzeButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
+        const aiAnalysisLoading = document.getElementById('aiAnalysisLoading');
+        
         analyzeButton.disabled = true;
+        aiAnalysisLoading.classList.remove('d-none');
 
         // Validate input data
         if (!propertyData || typeof propertyData !== 'object') {
@@ -30,12 +31,11 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         }
 
         // Get the current user's ID token
-        const user = firebase.auth().currentUser;
-        if (!user) {
+        if (!window.firebaseServices?.auth?.currentUser) {
             throw new Error('Please log in to use AI analysis');
         }
 
-        const idToken = await user.getIdToken();
+        const idToken = await window.firebaseServices.auth.currentUser.getIdToken();
 
         // Make the API call to the Cloud Function
         const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/analyzeProperty', {
@@ -56,24 +56,33 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         }
 
         const result = await response.json();
-        return {
-            analysis: result.analysis || 'No analysis available',
-            success: true
-        };
+        
+        // Display the analysis in the UI
+        const aiAnalysisResults = document.getElementById('aiAnalysisResults');
+        const aiAnalysisContent = document.getElementById('aiAnalysisContent');
+        
+        if (aiAnalysisResults && aiAnalysisContent) {
+            aiAnalysisResults.classList.remove('d-none');
+            aiAnalysisContent.innerHTML = result.analysis || 'No analysis available';
+        }
+
+        showToast('AI analysis completed successfully!', 'success');
+        return result;
 
     } catch (error) {
         console.error('AI Analysis error:', error);
         showToast(error.message || 'Failed to get AI analysis', 'danger');
-        return {
-            analysis: 'Analysis failed: ' + error.message,
-            success: false
-        };
+        throw error;
     } finally {
-        // Reset button state
+        // Reset UI state
         const analyzeButton = document.getElementById('analyzeWithAI');
+        const aiAnalysisLoading = document.getElementById('aiAnalysisLoading');
+        
         if (analyzeButton) {
-            analyzeButton.innerHTML = '<i class="bi bi-robot me-2"></i>Analyze with AI';
             analyzeButton.disabled = false;
+        }
+        if (aiAnalysisLoading) {
+            aiAnalysisLoading.classList.add('d-none');
         }
     }
 }
