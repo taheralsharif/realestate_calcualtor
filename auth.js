@@ -10,53 +10,63 @@ const firebaseConfig = {
     databaseURL: "https://real-estate-calculator-3212e-default-rtdb.firebaseio.com"
 };
 
-// Initialize Firebase and export services
+// Initialize Firebase
 let app;
-if (!firebase.apps.length) {
-    app = firebase.initializeApp(firebaseConfig);
-} else {
-    app = firebase.app();
+try {
+    if (!firebase.apps.length) {
+        app = firebase.initializeApp(firebaseConfig);
+    } else {
+        app = firebase.app();
+    }
+} catch (error) {
+    console.error('Error initializing Firebase:', error);
+    showToast('Error initializing application', 'danger');
 }
 
+// Initialize services
 const auth = firebase.auth();
 const database = firebase.database();
 const functions = firebase.functions();
 
 // Make services available globally
-window.firebaseApp = app;
-window.firebaseAuth = auth;
-window.firebaseDatabase = database;
-window.firebaseFunctions = functions;
+window.firebaseServices = {
+    app,
+    auth,
+    database,
+    functions
+};
 
 // Auth state observer
 auth.onAuthStateChanged((user) => {
     const currentPath = window.location.pathname;
     const isLoginPage = currentPath.includes('login.html');
+    const isSignupPage = currentPath.includes('signup.html');
+    const isPublicPage = currentPath.includes('index.html');
+    
+    updateUI(user);
     
     if (user) {
         // User is signed in
-        updateUI(true, user);
-        if (isLoginPage) {
+        if (isLoginPage || isSignupPage) {
             window.location.href = 'calculator.html';
         }
     } else {
         // User is signed out
-        updateUI(false);
-        if (!isLoginPage && !currentPath.includes('signup.html')) {
+        if (!isLoginPage && !isSignupPage && !isPublicPage) {
             window.location.href = 'login.html';
         }
     }
 });
 
 // Update UI based on auth state
-function updateUI(isLoggedIn, user = null) {
+function updateUI(user) {
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
     const userName = document.getElementById('userName');
 
     if (!userDropdown || !loginButton) return;
 
-    if (isLoggedIn && user) {
+    if (user) {
         userDropdown.style.display = 'block';
         loginButton.style.display = 'none';
         if (userName) {
@@ -72,10 +82,11 @@ function updateUI(isLoggedIn, user = null) {
 function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
-        .then((result) => {
+        .then(() => {
             showToast('Successfully signed in!');
         })
         .catch((error) => {
+            console.error('Google sign in error:', error);
             showToast(error.message, 'danger');
         });
 }
@@ -83,10 +94,11 @@ function signInWithGoogle() {
 // Email Sign In
 function signInWithEmail(email, password) {
     auth.signInWithEmailAndPassword(email, password)
-        .then((result) => {
+        .then(() => {
             showToast('Successfully signed in!');
         })
         .catch((error) => {
+            console.error('Email sign in error:', error);
             showToast(error.message, 'danger');
         });
 }
@@ -94,10 +106,11 @@ function signInWithEmail(email, password) {
 // Email Sign Up
 function signUpWithEmail(email, password) {
     auth.createUserWithEmailAndPassword(email, password)
-        .then((result) => {
+        .then(() => {
             showToast('Account created successfully!');
         })
         .catch((error) => {
+            console.error('Email sign up error:', error);
             showToast(error.message, 'danger');
         });
 }
@@ -107,9 +120,12 @@ function signOut() {
     auth.signOut()
         .then(() => {
             showToast('Successfully signed out!');
-            window.location.href = 'login.html';
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
         })
         .catch((error) => {
+            console.error('Sign out error:', error);
             showToast(error.message, 'danger');
         });
 }
@@ -121,6 +137,7 @@ function resetPassword(email) {
             showToast('Password reset email sent!');
         })
         .catch((error) => {
+            console.error('Password reset error:', error);
             showToast(error.message, 'danger');
         });
 }
