@@ -11,78 +11,44 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app, auth, database;
-
-try {
-    // Initialize Firebase app
-    if (!firebase.apps.length) {
-        app = firebase.initializeApp(firebaseConfig);
-    } else {
-        app = firebase.app();
-    }
-
-    // Initialize services
-    auth = firebase.auth();
-    database = firebase.database();
-
-    // Make services available globally
-    window.firebaseServices = {
-        app,
-        auth,
-        database,
-        // Add signOut method directly to the services object
-        signOut: async () => {
-            try {
-                await auth.signOut();
-                showToast('Successfully signed out!');
-                setTimeout(() => {
-                    window.location.replace('login.html');
-                }, 1000);
-            } catch (error) {
-                console.error('Sign out error:', error);
-                showToast(error.message, 'danger');
-            }
-        }
-    };
-
-    // Auth state observer
-    auth.onAuthStateChanged((user) => {
-        const currentPath = window.location.pathname;
-        const isLoginPage = currentPath.includes('login.html');
-        const isSignupPage = currentPath.includes('signup.html');
-        const isPublicPage = currentPath.includes('index.html');
-        
-        updateUI(user);
-        
-        if (user) {
-            // User is signed in
-            console.log('User is signed in:', user.email);
-            if (isLoginPage || isSignupPage) {
-                window.location.replace('calculator.html');
-            }
-        } else {
-            // User is signed out
-            console.log('User is signed out');
-            if (!isLoginPage && !isSignupPage && !isPublicPage) {
-                window.location.replace('login.html');
-            }
-        }
-    });
-
-} catch (error) {
-    console.error('Error initializing Firebase:', error);
-    showToast('Error initializing application. Please refresh the page.', 'danger');
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
 }
 
+const auth = firebase.auth();
+const database = firebase.database();
+
+// Auth state observer
+auth.onAuthStateChanged((user) => {
+    const currentPath = window.location.pathname;
+    const isLoginPage = currentPath.includes('login.html');
+    const isSignupPage = currentPath.includes('signup.html');
+    const isPublicPage = currentPath.includes('index.html');
+    
+    if (user) {
+        // User is signed in
+        updateUI(true, user);
+        if (isLoginPage || isSignupPage) {
+            window.location.href = 'calculator.html';
+        }
+    } else {
+        // User is signed out
+        updateUI(false);
+        if (!isLoginPage && !isSignupPage && !isPublicPage) {
+            window.location.href = 'login.html';
+        }
+    }
+});
+
 // Update UI based on auth state
-function updateUI(user) {
+function updateUI(isLoggedIn, user = null) {
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
     const userName = document.getElementById('userName');
 
     if (!userDropdown || !loginButton) return;
 
-    if (user) {
+    if (isLoggedIn && user) {
         userDropdown.style.display = 'block';
         loginButton.style.display = 'none';
         if (userName) {
@@ -94,75 +60,60 @@ function updateUI(user) {
     }
 }
 
-// Toast notification
-function showToast(message, type = 'success') {
-    const toast = document.querySelector('.toast');
-    const toastMessage = document.getElementById('toastMessage');
-    if (toast && toastMessage) {
-        toastMessage.textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger');
-        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        new bootstrap.Toast(toast).show();
-    }
-}
-
-// Export authentication functions
-window.signInWithGoogle = () => {
+// Google Sign In
+function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
-        .then((result) => {
-            console.log('Google sign in successful:', result.user.email);
+        .then(() => {
             showToast('Successfully signed in!');
-            setTimeout(() => {
-                window.location.replace('calculator.html');
-            }, 500);
         })
         .catch((error) => {
             console.error('Google sign in error:', error);
             showToast(error.message, 'danger');
         });
-};
+}
 
-window.signInWithEmail = (email, password) => {
+// Email Sign In
+function signInWithEmail(email, password) {
     auth.signInWithEmailAndPassword(email, password)
-        .then((result) => {
-            console.log('Email sign in successful:', result.user.email);
+        .then(() => {
             showToast('Successfully signed in!');
-            setTimeout(() => {
-                window.location.replace('calculator.html');
-            }, 500);
         })
         .catch((error) => {
             console.error('Email sign in error:', error);
             showToast(error.message, 'danger');
         });
-};
+}
 
-window.signUpWithEmail = (email, password) => {
+// Email Sign Up
+function signUpWithEmail(email, password) {
     auth.createUserWithEmailAndPassword(email, password)
         .then(() => {
             showToast('Account created successfully!');
-            window.location.replace('calculator.html');
         })
         .catch((error) => {
             console.error('Email sign up error:', error);
             showToast(error.message, 'danger');
         });
-};
+}
 
-window.resetPassword = (email) => {
-    auth.sendPasswordResetEmail(email)
+// Sign Out
+function signOut() {
+    auth.signOut()
         .then(() => {
-            showToast('Password reset email sent!');
+            showToast('Successfully signed out!');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
         })
         .catch((error) => {
-            console.error('Password reset error:', error);
+            console.error('Sign out error:', error);
             showToast(error.message, 'danger');
         });
-};
+}
 
 // Database operations
-window.saveAnalysis = (analysisData) => {
+function saveAnalysis(analysisData) {
     if (!auth.currentUser) {
         showToast('Please sign in to save analyses', 'danger');
         return Promise.reject('Not authenticated');
@@ -183,9 +134,9 @@ window.saveAnalysis = (analysisData) => {
         showToast(error.message, 'danger');
         throw error;
     });
-};
+}
 
-window.getAnalyses = () => {
+function getAnalyses() {
     if (!auth.currentUser) {
         return Promise.reject('Not authenticated');
     }
@@ -202,9 +153,9 @@ window.getAnalyses = () => {
             });
             return analyses.sort((a, b) => b.createdAt - a.createdAt);
         });
-};
+}
 
-window.deleteAnalysis = (analysisId) => {
+function deleteAnalysis(analysisId) {
     if (!auth.currentUser) {
         showToast('Please sign in to delete analyses', 'danger');
         return Promise.reject('Not authenticated');
@@ -219,7 +170,28 @@ window.deleteAnalysis = (analysisId) => {
             showToast(error.message, 'danger');
             throw error;
         });
-};
+}
+
+// Toast notification
+function showToast(message, type = 'success') {
+    const toast = document.querySelector('.toast');
+    const toastMessage = document.getElementById('toastMessage');
+    if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        new bootstrap.Toast(toast).show();
+    }
+}
+
+// Make functions available globally
+window.signInWithGoogle = signInWithGoogle;
+window.signInWithEmail = signInWithEmail;
+window.signUpWithEmail = signUpWithEmail;
+window.signOut = signOut;
+window.saveAnalysis = saveAnalysis;
+window.getAnalyses = getAnalyses;
+window.deleteAnalysis = deleteAnalysis;
 
 // Theme toggle functionality
 document.addEventListener('DOMContentLoaded', function() {
