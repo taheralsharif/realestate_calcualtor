@@ -31,10 +31,14 @@ async function initializeFirebase() {
         auth = firebase.auth();
         db = firebase.database();
 
-        // Set up auth state listener
-        auth.onAuthStateChanged((user) => {
-            console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
-            updateUserProfile(user);
+        // Wait for auth to be ready
+        await new Promise((resolve) => {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+                console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+                updateUserProfile(user);
+                unsubscribe();
+                resolve();
+            });
         });
 
         return true;
@@ -49,6 +53,7 @@ async function initializeFirebase() {
 async function handleGoogleSignIn(e) {
     e.preventDefault();
     try {
+        // Ensure Firebase is initialized
         if (!auth) {
             await initializeFirebase();
         }
@@ -321,10 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         console.log('Page loaded, initializing Firebase');
-        const initialized = await initializeFirebase();
-        if (!initialized) {
-            console.error('Failed to initialize Firebase');
-        }
+        await initializeFirebase();
 
         // Set up event listeners after Firebase is initialized
         const googleLoginBtn = document.getElementById('googleLoginBtn');
