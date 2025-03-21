@@ -63,6 +63,7 @@ async function handleGoogleSignIn(e) {
             prompt: 'select_account'
         });
 
+        console.log('Starting Google Sign In process');
         const result = await auth.signInWithPopup(provider);
         console.log('Google sign in successful:', result.user.email);
         showToast('Successfully logged in with Google!');
@@ -133,6 +134,7 @@ async function handleEmailSignup(e) {
 
 // Update user profile display
 function updateUserProfile(user) {
+    console.log('updateUserProfile called with user:', user ? 'logged in' : 'logged out');
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
     const userMenuButton = document.getElementById('userMenuButton');
@@ -141,6 +143,7 @@ function updateUserProfile(user) {
     
     if (user) {
         // User is signed in
+        console.log('User is signed in, updating UI');
         if (userDropdown) userDropdown.classList.remove('d-none');
         if (loginButton) loginButton.classList.add('d-none');
         if (calculatorContent) calculatorContent.classList.remove('d-none');
@@ -161,20 +164,29 @@ function updateUserProfile(user) {
             });
         }
 
-        // Only redirect to calculator if we're on the login page
-        if (window.location.pathname.includes('login.html')) {
-            window.location.href = 'calculator.html';
+        // Only redirect to calculator if we're on the login page and not already redirecting
+        if (window.location.pathname.includes('login.html') && !window.isRedirecting) {
+            console.log('Redirecting to calculator page');
+            window.isRedirecting = true;
+            setTimeout(() => {
+                window.location.href = 'calculator.html';
+            }, 1000);
         }
     } else {
         // User is signed out
+        console.log('User is signed out, updating UI');
         if (userDropdown) userDropdown.classList.add('d-none');
         if (loginButton) loginButton.classList.remove('d-none');
         if (calculatorContent) calculatorContent.classList.add('d-none');
         if (userName) userName.textContent = 'User';
         
-        // Only redirect to login if we're not already on the login page
-        if (!window.location.pathname.includes('login.html')) {
-            window.location.href = 'login.html';
+        // Only redirect to login if we're not already on the login page and not already redirecting
+        if (!window.location.pathname.includes('login.html') && !window.isRedirecting) {
+            console.log('Redirecting to login page');
+            window.isRedirecting = true;
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
         }
     }
 }
@@ -308,6 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Initialize Firebase when the page loads
 document.addEventListener('DOMContentLoaded', async () => {
     try {
+        console.log('Page loaded, initializing Firebase');
         const initialized = await initializeFirebase();
         if (!initialized) {
             console.error('Failed to initialize Firebase');
@@ -320,16 +333,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             googleLoginBtn.replaceWith(googleLoginBtn.cloneNode(true));
             // Add the new event listener
             document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleSignIn);
+            console.log('Google login button event listener added');
         }
 
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', handleEmailLogin);
+            console.log('Email login form event listener added');
         }
 
         const signupForm = document.getElementById('signupForm');
         if (signupForm) {
             signupForm.addEventListener('submit', handleEmailSignup);
+            console.log('Signup form event listener added');
         }
     } catch (error) {
         console.error('Error during initialization:', error);
