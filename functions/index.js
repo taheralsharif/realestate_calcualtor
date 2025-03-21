@@ -1,10 +1,5 @@
 const functions = require('firebase-functions');
-const cors = require('cors')({ 
-    origin: ['https://taheralsharif.github.io', 'http://localhost:5000'],
-    methods: ['POST', 'OPTIONS'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization']
-});
+const cors = require('cors');
 const { Groq } = require('groq-sdk');
 const admin = require('firebase-admin');
 const { encrypt, decrypt } = require('./utils/encryption');
@@ -15,6 +10,14 @@ admin.initializeApp();
 // Initialize Groq client with environment variable
 const groq = new Groq({
     apiKey: functions.config().groq.api_key
+});
+
+// CORS middleware
+const corsHandler = cors({
+    origin: ['https://taheralsharif.github.io', 'http://localhost:5000', 'http://127.0.0.1:5000'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
 });
 
 exports.getAIAnalysis = functions.https.onRequest((request, response) => {
@@ -31,7 +34,7 @@ exports.getAIAnalysis = functions.https.onRequest((request, response) => {
         return;
     }
 
-    return cors(request, response, async () => {
+    return corsHandler(request, response, async () => {
         try {
             if (request.method !== 'POST') {
                 response.status(405).send('Method Not Allowed');
@@ -107,20 +110,41 @@ Format the response in a clear, easy-to-read structure with bullet points.`;
 });
 
 // Function to get Google Maps API key
-exports.getGoogleMapsKey = functions.https.onCall(async (data, context) => {
-    try {
-        const snapshot = await admin.database().ref('googleMaps').once('value');
-        const encryptedKey = snapshot.val();
-        
-        if (!encryptedKey) {
-            throw new Error('Google Maps API key not found');
+exports.getGoogleMapsKey = functions.https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const key = await getEncryptedKey('googleMapsKey');
+            res.json({ apiKey: key });
+        } catch (error) {
+            console.error('Error getting Google Maps key:', error);
+            res.status(500).json({ error: 'Failed to get API key' });
         }
-        
-        // Decrypt the API key
-        const decryptedKey = decrypt(encryptedKey);
-        return { apiKey: decryptedKey };
-    } catch (error) {
-        console.error('Error getting Google Maps API key:', error);
-        throw new functions.https.HttpsError('internal', 'Failed to get Google Maps API key');
-    }
+    });
+});
+
+// Function to get Zillow API key
+exports.getZillowKey = functions.https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const key = await getEncryptedKey('zillowKey');
+            res.json({ apiKey: key });
+        } catch (error) {
+            console.error('Error getting Zillow key:', error);
+            res.status(500).json({ error: 'Failed to get API key' });
+        }
+    });
+});
+
+// Function to analyze investment
+exports.analyzeInvestment = functions.https.onRequest((req, res) => {
+    corsHandler(req, res, async () => {
+        try {
+            const { propertyData, estimatedRent } = req.body;
+            const analysis = await analyzeInvestmentWithAI(propertyData, estimatedRent);
+            res.json({ analysis });
+        } catch (error) {
+            console.error('Error analyzing investment:', error);
+            res.status(500).json({ error: 'Failed to analyze investment' });
+        }
+    });
 }); 
