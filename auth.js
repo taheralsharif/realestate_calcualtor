@@ -31,14 +31,10 @@ async function initializeFirebase() {
         auth = firebase.auth();
         db = firebase.database();
 
-        // Wait for auth to be ready
-        await new Promise((resolve) => {
-            const unsubscribe = auth.onAuthStateChanged((user) => {
-                console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
-                updateUserProfile(user);
-                unsubscribe();
-                resolve();
-            });
+        // Set up auth state listener
+        auth.onAuthStateChanged((user) => {
+            console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
+            updateUserProfile(user);
         });
 
         return true;
@@ -173,9 +169,7 @@ function updateUserProfile(user) {
         if (window.location.pathname.includes('login.html') && !window.isRedirecting) {
             console.log('Redirecting to calculator page');
             window.isRedirecting = true;
-            setTimeout(() => {
-                window.location.href = 'calculator.html';
-            }, 1000);
+            window.location.href = 'calculator.html';
         }
     } else {
         // User is signed out
@@ -189,9 +183,7 @@ function updateUserProfile(user) {
         if (!window.location.pathname.includes('login.html') && !window.isRedirecting) {
             console.log('Redirecting to login page');
             window.isRedirecting = true;
-            setTimeout(() => {
-                window.location.href = 'login.html';
-            }, 1000);
+            window.location.href = 'login.html';
         }
     }
 }
