@@ -11,7 +11,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app, auth, database, functions;
+let app, auth, database;
 
 try {
     // Initialize Firebase app
@@ -24,21 +24,19 @@ try {
     // Initialize services
     auth = firebase.auth();
     database = firebase.database();
-    functions = firebase.functions();
 
     // Make services available globally
     window.firebaseServices = {
         app,
         auth,
         database,
-        functions,
         // Add signOut method directly to the services object
         signOut: async () => {
             try {
                 await auth.signOut();
                 showToast('Successfully signed out!');
                 setTimeout(() => {
-                    window.location.href = 'login.html';
+                    window.location.replace('login.html');
                 }, 1000);
             } catch (error) {
                 console.error('Sign out error:', error);
@@ -58,11 +56,13 @@ try {
         
         if (user) {
             // User is signed in
+            console.log('User is signed in:', user.email);
             if (isLoginPage || isSignupPage) {
                 window.location.replace('calculator.html');
             }
         } else {
             // User is signed out
+            console.log('User is signed out');
             if (!isLoginPage && !isSignupPage && !isPublicPage) {
                 window.location.replace('login.html');
             }
@@ -110,9 +110,12 @@ function showToast(message, type = 'success') {
 window.signInWithGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
-        .then(() => {
+        .then((result) => {
+            console.log('Google sign in successful:', result.user.email);
             showToast('Successfully signed in!');
-            window.location.replace('calculator.html');
+            setTimeout(() => {
+                window.location.replace('calculator.html');
+            }, 500);
         })
         .catch((error) => {
             console.error('Google sign in error:', error);
@@ -122,9 +125,12 @@ window.signInWithGoogle = () => {
 
 window.signInWithEmail = (email, password) => {
     auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
+        .then((result) => {
+            console.log('Email sign in successful:', result.user.email);
             showToast('Successfully signed in!');
-            window.location.replace('calculator.html');
+            setTimeout(() => {
+                window.location.replace('calculator.html');
+            }, 500);
         })
         .catch((error) => {
             console.error('Email sign in error:', error);
