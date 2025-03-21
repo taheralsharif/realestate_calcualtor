@@ -67,10 +67,7 @@ async function handleGoogleSignIn(e) {
         console.log('Google sign in successful:', result.user.email);
         showToast('Successfully logged in with Google!');
         
-        // Redirect after successful login
-        setTimeout(() => {
-            window.location.href = 'calculator.html';
-        }, 1000);
+        // Let the auth state change listener handle the redirect
     } catch (error) {
         console.error('Google login error:', error);
         let errorMessage = 'Error logging in with Google. ';
@@ -163,12 +160,19 @@ function updateUserProfile(user) {
                 });
             });
         }
+
+        // Only redirect to calculator if we're on the login page
+        if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'calculator.html';
+        }
     } else {
         // User is signed out
         if (userDropdown) userDropdown.classList.add('d-none');
         if (loginButton) loginButton.classList.remove('d-none');
         if (calculatorContent) calculatorContent.classList.add('d-none');
         if (userName) userName.textContent = 'User';
+        
+        // Only redirect to login if we're not already on the login page
         if (!window.location.pathname.includes('login.html')) {
             window.location.href = 'login.html';
         }
@@ -312,7 +316,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Set up event listeners after Firebase is initialized
         const googleLoginBtn = document.getElementById('googleLoginBtn');
         if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', handleGoogleSignIn);
+            // Remove any existing event listeners
+            googleLoginBtn.replaceWith(googleLoginBtn.cloneNode(true));
+            // Add the new event listener
+            document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleSignIn);
         }
 
         const loginForm = document.getElementById('loginForm');
