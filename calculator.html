@@ -315,8 +315,39 @@
     <script src="auth.js"></script>
     <script src="ai_analysis.js"></script>
     <script src="script.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_API_KEY&libraries=places"></script>
     <script>
+        async function initGoogleMaps() {
+            try {
+                // Get the API key from Firebase
+                const getGoogleMapsKey = firebase.functions().httpsCallable('getGoogleMapsKey');
+                const result = await getGoogleMapsKey();
+                const apiKey = result.data.apiKey;
+
+                if (!apiKey) {
+                    throw new Error('Failed to get Google Maps API key');
+                }
+
+                // Load Google Maps script
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`;
+                script.async = true;
+                script.defer = true;
+                script.onerror = () => {
+                    console.error('Failed to load Google Maps API');
+                    showToast('Failed to load Google Maps. Please check your internet connection.', 'error');
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                console.error('Error initializing Google Maps:', error);
+                showToast('Error initializing Google Maps. Please try again later.', 'error');
+            }
+        }
+
+        // Initialize Google Maps when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initGoogleMaps();
+        });
+
         // Wait for Firebase to initialize before setting up auth state listener
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -543,11 +574,6 @@
                 }
             });
         }
-
-        // Initialize when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initGooglePlaces();
-        });
     </script>
 </body>
 </html> 

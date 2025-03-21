@@ -7,6 +7,122 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .hero-section {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+        }
+
+        .animated-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .animated-background::before,
+        .animated-background::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 8s infinite;
+        }
+
+        .animated-background::before {
+            top: -100px;
+            left: -100px;
+        }
+
+        .animated-background::after {
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(50px, 50px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, 100px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-50px, 50px) rotate(270deg);
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease-out 0.2s;
+            animation-fill-mode: both;
+        }
+
+        .hero-buttons {
+            animation: fadeInUp 1s ease-out 0.4s;
+            animation-fill-mode: both;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #64b5f6;
+        }
+    </style>
     <script>
         // Initialize theme from localStorage
         document.addEventListener('DOMContentLoaded', function() {
@@ -65,24 +181,27 @@
     </nav>
 
     <!-- Hero Section -->
-    <div class="container my-5">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 mb-4">Smart Real Estate Investment Analysis</h1>
-                <p class="lead mb-4">Make data-driven investment decisions with RealSense's advanced calculator and AI-powered analysis.</p>
-                <div class="d-flex gap-3 justify-content-center">
-                    <a href="calculator.html" class="btn btn-light btn-lg">
-                        <i class="bi bi-calculator me-2"></i>
-                        Start Calculating
-                    </a>
-                    <a href="login.html" class="btn btn-outline-light btn-lg" id="createAccountBtn">
-                        <i class="bi bi-person-plus me-2"></i>
-                        Create Account
-                    </a>
+    <section class="hero-section">
+        <div class="animated-background"></div>
+        <div class="hero-content">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8 text-center">
+                        <h1 class="hero-title">Smart Real Estate Investment Analysis</h1>
+                        <p class="hero-subtitle">Make data-driven investment decisions with our advanced calculator and AI-powered analysis</p>
+                        <div class="hero-buttons">
+                            <a href="calculator.html" class="btn btn-light btn-lg me-3">
+                                <i class="bi bi-calculator me-2"></i>Start Calculating
+                            </a>
+                            <a href="login.html" class="btn btn-outline-light btn-lg">
+                                <i class="bi bi-person-plus me-2"></i>Create Account
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
     <!-- Features Section -->
     <div class="py-5">
