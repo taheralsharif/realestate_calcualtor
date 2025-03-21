@@ -14,6 +14,7 @@ const firebaseConfig = {
 let app;
 let auth;
 let database;
+let isRedirecting = false;
 
 // Initialize Firebase
 function initializeFirebase() {
@@ -28,13 +29,17 @@ function initializeFirebase() {
 
 // Initialize Firebase when the page loads
 document.addEventListener('DOMContentLoaded', function() {
-    initializeFirebase();
-    setupAuthStateListener();
+    if (!firebase.apps.length) {
+        initializeFirebase();
+        setupAuthStateListener();
+    }
 });
 
 // Set up authentication state listener
 function setupAuthStateListener() {
     auth.onAuthStateChanged((user) => {
+        if (isRedirecting) return; // Prevent multiple redirects
+
         const userDropdown = document.getElementById('userDropdown');
         const loginButton = document.getElementById('loginButton');
         const userName = document.getElementById('userName');
@@ -48,7 +53,8 @@ function setupAuthStateListener() {
             }
 
             // If we're on the login page, redirect to calculator
-            if (window.location.pathname.includes('login.html')) {
+            if (window.location.pathname.includes('login.html') && !isRedirecting) {
+                isRedirecting = true;
                 window.location.href = 'calculator.html';
             }
         } else {
@@ -59,7 +65,8 @@ function setupAuthStateListener() {
             }
 
             // If we're not on the login page, redirect to login
-            if (!window.location.pathname.includes('login.html')) {
+            if (!window.location.pathname.includes('login.html') && !isRedirecting) {
+                isRedirecting = true;
                 window.location.href = 'login.html';
             }
         }
@@ -69,6 +76,7 @@ function setupAuthStateListener() {
 // Handle Google Sign In
 async function handleGoogleSignIn(e) {
     if (e) e.preventDefault();
+    if (isRedirecting) return; // Prevent multiple sign-in attempts
     
     try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -78,6 +86,7 @@ async function handleGoogleSignIn(e) {
     } catch (error) {
         console.error('Google sign in error:', error);
         showToast(error.message, 'danger');
+        isRedirecting = false; // Reset redirect flag if there's an error
     }
 }
 

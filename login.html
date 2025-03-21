@@ -147,69 +147,13 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="auth.js"></script>
     <script>
-        // Show toast notification
-        function showToast(message, type = 'success') {
-            const toast = document.querySelector('.toast');
-            const toastMessage = document.getElementById('toastMessage');
-            if (toast && toastMessage) {
-                toastMessage.textContent = message;
-                toast.classList.remove('bg-success', 'bg-danger');
-                toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-                new bootstrap.Toast(toast).show();
-            }
-        }
-
-        // Password Reset Modal
-        const forgotPasswordLink = document.getElementById('forgotPassword');
-        const passwordResetModal = new bootstrap.Modal(document.getElementById('passwordResetModal'));
-        const sendResetLinkBtn = document.getElementById('sendResetLink');
-
-        if (forgotPasswordLink && passwordResetModal) {
-            forgotPasswordLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                passwordResetModal.show();
-            });
-        }
-
-        if (sendResetLinkBtn) {
-            sendResetLinkBtn.addEventListener('click', async () => {
-                const email = document.getElementById('resetEmail').value;
-                if (email) {
-                    try {
-                        await resetPassword(email);
-                        showToast('Password reset email sent! Please check your inbox.');
-                        passwordResetModal.hide();
-                    } catch (error) {
-                        showToast(error.message, 'danger');
-                    }
-                }
-            });
-        }
-
-        // Remember me functionality
-        const rememberMeCheckbox = document.getElementById('rememberMe');
-        const emailInput = document.getElementById('email');
-
-        if (rememberMeCheckbox && emailInput) {
-            // Check if there's a saved email
-            const savedEmail = localStorage.getItem('rememberedEmail');
-            if (savedEmail) {
-                emailInput.value = savedEmail;
-                rememberMeCheckbox.checked = true;
-            }
-
-            // Save email when checkbox is checked
-            rememberMeCheckbox.addEventListener('change', () => {
-                if (rememberMeCheckbox.checked) {
-                    localStorage.setItem('rememberedEmail', emailInput.value);
-                } else {
-                    localStorage.removeItem('rememberedEmail');
-                }
-            });
-        }
+        let hasInitialized = false;
 
         // Add event listeners after DOM is loaded
         document.addEventListener('DOMContentLoaded', function() {
+            if (hasInitialized) return;
+            hasInitialized = true;
+
             // Add Google Sign-In button event listener
             const googleLoginBtn = document.getElementById('googleLoginBtn');
             if (googleLoginBtn) {
@@ -221,7 +165,68 @@
             if (loginForm) {
                 loginForm.addEventListener('submit', handleEmailLogin);
             }
+
+            // Remember me functionality
+            const rememberMeCheckbox = document.getElementById('rememberMe');
+            const emailInput = document.getElementById('email');
+
+            if (rememberMeCheckbox && emailInput) {
+                // Check if there's a saved email
+                const savedEmail = localStorage.getItem('rememberedEmail');
+                if (savedEmail) {
+                    emailInput.value = savedEmail;
+                    rememberMeCheckbox.checked = true;
+                }
+
+                // Save email when checkbox is checked
+                rememberMeCheckbox.addEventListener('change', () => {
+                    if (rememberMeCheckbox.checked) {
+                        localStorage.setItem('rememberedEmail', emailInput.value);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
+                });
+            }
+
+            // Password Reset Modal
+            const forgotPasswordLink = document.getElementById('forgotPassword');
+            const passwordResetModal = new bootstrap.Modal(document.getElementById('passwordResetModal'));
+            const sendResetLinkBtn = document.getElementById('sendResetLink');
+
+            if (forgotPasswordLink && passwordResetModal) {
+                forgotPasswordLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    passwordResetModal.show();
+                });
+            }
+
+            if (sendResetLinkBtn) {
+                sendResetLinkBtn.addEventListener('click', async () => {
+                    const email = document.getElementById('resetEmail').value;
+                    if (email) {
+                        try {
+                            await resetPassword(email);
+                            showToast('Password reset email sent! Please check your inbox.');
+                            passwordResetModal.hide();
+                        } catch (error) {
+                            showToast(error.message, 'danger');
+                        }
+                    }
+                });
+            }
         });
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.querySelector('.toast');
+            const toastMessage = document.getElementById('toastMessage');
+            if (toast && toastMessage) {
+                toastMessage.textContent = message;
+                toast.classList.remove('bg-success', 'bg-danger');
+                toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+                new bootstrap.Toast(toast).show();
+            }
+        }
     </script>
 </body>
 </html> 
