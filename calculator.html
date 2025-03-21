@@ -63,7 +63,7 @@
                             <span id="userName">User</span>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#" onclick="signOut()">
+                            <li><a class="dropdown-item" href="#" onclick="window.firebaseServices.auth.signOut()">
                                 <i class="bi bi-box-arrow-right me-2"></i>Logout
                             </a></li>
                         </ul>
@@ -360,31 +360,36 @@
             }
         }
 
-        // Initialize Firebase services
-        const { auth, database, functions } = window.firebaseServices;
+        // Get Firebase services from the global object
+        const { auth, database, functions } = window.firebaseServices || {};
 
         // Check authentication state
-        auth.onAuthStateChanged((user) => {
-            const userDropdown = document.getElementById('userDropdown');
-            const loginButton = document.getElementById('loginButton');
-            const userName = document.getElementById('userName');
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                const userDropdown = document.getElementById('userDropdown');
+                const loginButton = document.getElementById('loginButton');
+                const userName = document.getElementById('userName');
 
-            if (user) {
-                // User is signed in
-                if (userDropdown && loginButton) {
-                    userDropdown.style.display = 'block';
-                    loginButton.style.display = 'none';
-                    if (userName) {
-                        userName.textContent = user.displayName || user.email;
+                if (user) {
+                    // User is signed in
+                    if (userDropdown && loginButton) {
+                        userDropdown.style.display = 'block';
+                        loginButton.style.display = 'none';
+                        if (userName) {
+                            userName.textContent = user.displayName || user.email;
+                        }
                     }
+                    // Initialize Google Maps after authentication
+                    initGoogleMaps();
+                } else {
+                    // User is signed out
+                    window.location.href = 'login.html';
                 }
-                // Initialize Google Maps after authentication
-                initGoogleMaps();
-            } else {
-                // User is signed out
-                window.location.href = 'login.html';
-            }
-        });
+            });
+        } else {
+            console.error('Firebase Auth not initialized');
+            window.location.href = 'login.html';
+        }
 
         // Handle Zillow URL submission
         document.getElementById('zillowUrlForm').addEventListener('submit', async function(e) {
