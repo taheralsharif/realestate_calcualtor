@@ -11,132 +11,108 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-let auth;
-let database;
-let isRedirecting = false;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const database = firebase.database();
 
-// Initialize Firebase
-function initializeFirebase() {
-    if (!firebase.apps.length) {
-        app = firebase.initializeApp(firebaseConfig);
+// Auth state observer
+auth.onAuthStateChanged((user) => {
+    const currentPath = window.location.pathname;
+    const isLoginPage = currentPath.includes('login.html');
+    
+    if (user) {
+        // User is signed in
+        updateUI(true, user);
+        if (isLoginPage) {
+            window.location.href = 'calculator.html';
+        }
     } else {
-        app = firebase.app();
-    }
-    auth = firebase.auth();
-    database = firebase.database();
-}
-
-// Initialize Firebase when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    if (!firebase.apps.length) {
-        initializeFirebase();
-        setupAuthStateListener();
+        // User is signed out
+        updateUI(false);
+        if (!isLoginPage) {
+            window.location.href = 'login.html';
+        }
     }
 });
 
-// Set up authentication state listener
-function setupAuthStateListener() {
-    auth.onAuthStateChanged((user) => {
-        if (isRedirecting) return; // Prevent multiple redirects
+// Update UI based on auth state
+function updateUI(isLoggedIn, user = null) {
+    const userDropdown = document.getElementById('userDropdown');
+    const loginButton = document.getElementById('loginButton');
+    const userName = document.getElementById('userName');
 
-        const userDropdown = document.getElementById('userDropdown');
-        const loginButton = document.getElementById('loginButton');
-        const userName = document.getElementById('userName');
+    if (!userDropdown || !loginButton) return;
 
-        if (user) {
-            console.log('User is signed in:', user.email);
-            if (userDropdown) {
-                userDropdown.style.display = 'block';
-                loginButton.style.display = 'none';
-                userName.textContent = user.displayName || user.email;
-            }
-
-            // If we're on the login page, redirect to calculator
-            if (window.location.pathname.includes('login.html') && !isRedirecting) {
-                isRedirecting = true;
-                window.location.href = 'calculator.html';
-            }
-        } else {
-            console.log('User is signed out');
-            if (userDropdown) {
-                userDropdown.style.display = 'none';
-                loginButton.style.display = 'block';
-            }
-
-            // If we're not on the login page, redirect to login
-            if (!window.location.pathname.includes('login.html') && !isRedirecting) {
-                isRedirecting = true;
-                window.location.href = 'login.html';
-            }
+    if (isLoggedIn && user) {
+        userDropdown.style.display = 'block';
+        loginButton.style.display = 'none';
+        if (userName) {
+            userName.textContent = user.displayName || user.email;
         }
-    });
-}
-
-// Handle Google Sign In
-async function handleGoogleSignIn(e) {
-    if (e) e.preventDefault();
-    if (isRedirecting) return; // Prevent multiple sign-in attempts
-    
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        const result = await auth.signInWithPopup(provider);
-        console.log('Google sign in successful:', result.user.email);
-        showToast('Successfully logged in!');
-    } catch (error) {
-        console.error('Google sign in error:', error);
-        showToast(error.message, 'danger');
-        isRedirecting = false; // Reset redirect flag if there's an error
+    } else {
+        userDropdown.style.display = 'none';
+        loginButton.style.display = 'block';
     }
 }
 
-// Handle Email Login
-async function handleEmailLogin(e) {
-    e.preventDefault();
-    
-    try {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        console.log('Email login successful:', userCredential.user.email);
-        showToast('Successfully logged in!');
-    } catch (error) {
-        console.error('Email login error:', error);
-        showToast(error.message, 'danger');
-    }
+// Google Sign In
+function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            showToast('Successfully signed in!');
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+        });
 }
 
-// Handle Email Signup
-async function handleEmailSignup(e) {
-    e.preventDefault();
-    
-    try {
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        console.log('Email signup successful:', userCredential.user.email);
-        showToast('Account created successfully!');
-    } catch (error) {
-        console.error('Email signup error:', error);
-        showToast(error.message, 'danger');
-    }
+// Email Sign In
+function signInWithEmail(email, password) {
+    auth.signInWithEmailAndPassword(email, password)
+        .then((result) => {
+            showToast('Successfully signed in!');
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+        });
 }
 
-// Handle Logout
-async function handleLogout() {
-    try {
-        await auth.signOut();
-        showToast('Successfully logged out!');
-        window.location.href = 'login.html';
-    } catch (error) {
-        console.error('Logout error:', error);
-        showToast(error.message, 'danger');
-    }
+// Email Sign Up
+function signUpWithEmail(email, password) {
+    auth.createUserWithEmailAndPassword(email, password)
+        .then((result) => {
+            showToast('Account created successfully!');
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+        });
 }
 
-// Show toast notification
+// Sign Out
+function signOut() {
+    auth.signOut()
+        .then(() => {
+            showToast('Successfully signed out!');
+            window.location.href = 'login.html';
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+        });
+}
+
+// Password Reset
+function resetPassword(email) {
+    auth.sendPasswordResetEmail(email)
+        .then(() => {
+            showToast('Password reset email sent!');
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+        });
+}
+
+// Toast notification
 function showToast(message, type = 'success') {
     const toast = document.querySelector('.toast');
     const toastMessage = document.getElementById('toastMessage');
@@ -148,101 +124,67 @@ function showToast(message, type = 'success') {
     }
 }
 
-// Save analysis to database
-async function saveAnalysis(analysisData) {
-    try {
-        if (!auth || !auth.currentUser) {
-            throw new Error('User must be logged in to save analyses');
-        }
-
-        if (!database) {
-            await initializeFirebase();
-        }
-
-        const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`);
-        const newAnalysisRef = analysisRef.push();
-        
-        const analysis = {
-            ...analysisData,
-            id: newAnalysisRef.key,
-            userId: auth.currentUser.uid,
-            createdAt: Date.now()
-        };
-
-        await newAnalysisRef.set(analysis);
-        showToast('Analysis saved successfully!', 'success');
-        return analysis.id;
-    } catch (error) {
-        console.error('Error saving analysis:', error);
-        showToast('Error saving analysis. Please try again.', 'danger');
-        throw error;
+// Database operations
+function saveAnalysis(analysisData) {
+    const user = auth.currentUser;
+    if (!user) {
+        showToast('Please sign in to save analyses', 'danger');
+        return Promise.reject('Not authenticated');
     }
-}
 
-// Get saved analyses for current user
-async function getSavedAnalyses() {
-    try {
-        if (!auth || !auth.currentUser) {
-            throw new Error('User must be logged in to view analyses');
-        }
-
-        if (!database) {
-            await initializeFirebase();
-        }
-
-        const snapshot = await database.ref(`users/${auth.currentUser.uid}/analyses`).once('value');
-        const analyses = [];
-        
-        snapshot.forEach((childSnapshot) => {
-            analyses.push({
-                id: childSnapshot.key,
-                ...childSnapshot.val()
-            });
-        });
-
-        // Sort by creation date, newest first
-        return analyses.sort((a, b) => b.createdAt - a.createdAt);
-    } catch (error) {
-        console.error('Error getting analyses:', error);
-        showToast('Error loading analyses. Please try again.', 'danger');
-        return [];
-    }
-}
-
-// Delete analysis
-async function deleteAnalysis(analysisId) {
-    try {
-        if (!auth || !auth.currentUser) {
-            throw new Error('User must be logged in to delete analyses');
-        }
-
-        if (!database) {
-            await initializeFirebase();
-        }
-
-        await database.ref(`users/${auth.currentUser.uid}/analyses/${analysisId}`).remove();
-        showToast('Analysis deleted successfully!', 'success');
-        
-        // Reload analyses list if on history page
-        if (window.location.pathname.includes('history.html')) {
-            loadAnalyses();
-        }
-    } catch (error) {
-        console.error('Error deleting analysis:', error);
-        showToast('Error deleting analysis. Please try again.', 'danger');
-        throw error;
-    }
-}
-
-// Password Reset Function
-async function resetPassword(email) {
-    try {
-        await auth.sendPasswordResetEmail(email);
-        showToast('Password reset email sent! Please check your inbox.');
-    } catch (error) {
+    const analysisRef = database.ref(`users/${user.uid}/analyses`).push();
+    return analysisRef.set({
+        ...analysisData,
+        id: analysisRef.key,
+        userId: user.uid,
+        createdAt: Date.now()
+    })
+    .then(() => {
+        showToast('Analysis saved successfully!');
+        return analysisRef.key;
+    })
+    .catch((error) => {
         showToast(error.message, 'danger');
         throw error;
+    });
+}
+
+function getAnalyses() {
+    const user = auth.currentUser;
+    if (!user) {
+        return Promise.reject('Not authenticated');
     }
+
+    return database.ref(`users/${user.uid}/analyses`)
+        .once('value')
+        .then((snapshot) => {
+            const analyses = [];
+            snapshot.forEach((child) => {
+                analyses.push({
+                    id: child.key,
+                    ...child.val()
+                });
+            });
+            return analyses.sort((a, b) => b.createdAt - a.createdAt);
+        });
+}
+
+function deleteAnalysis(analysisId) {
+    const user = auth.currentUser;
+    if (!user) {
+        showToast('Please sign in to delete analyses', 'danger');
+        return Promise.reject('Not authenticated');
+    }
+
+    return database.ref(`users/${user.uid}/analyses/${analysisId}`)
+        .remove()
+        .then(() => {
+            showToast('Analysis deleted successfully!');
+        })
+        .catch((error) => {
+            showToast(error.message, 'danger');
+            throw error;
+        });
 }
 
 // Theme toggle functionality
