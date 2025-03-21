@@ -349,9 +349,9 @@ async function saveCurrentAnalysis() {
             createdAt: new Date().toISOString()
         };
 
-        // Save to Firebase
+        // Save to Firebase Realtime Database
         const user = auth.currentUser;
-        const analysesRef = firebase.database().ref(`analyses/${user.uid}`);
+        const analysesRef = database.ref(`analyses/${user.uid}`);
         const newAnalysisRef = analysesRef.push();
         await newAnalysisRef.set(data);
 

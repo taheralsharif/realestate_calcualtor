@@ -370,7 +370,8 @@
                     projectId: "real-estate-calculator-3212e",
                     storageBucket: "real-estate-calculator-3212e.appspot.com",
                     messagingSenderId: "123456789012",
-                    appId: "1:123456789012:web:abcdef1234567890"
+                    appId: "1:123456789012:web:abcdef1234567890",
+                    databaseURL: "https://real-estate-calculator-3212e-default-rtdb.firebaseio.com"
                 };
 
                 // Initialize Firebase if it hasn't been initialized yet
@@ -380,7 +381,7 @@
 
                 // Initialize services
                 auth = firebase.auth();
-                db = firebase.firestore();
+                database = firebase.database();
                 functions = firebase.functions();
 
                 return true;
