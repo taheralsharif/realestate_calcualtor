@@ -54,17 +54,17 @@ try {
         const isSignupPage = currentPath.includes('signup.html');
         const isPublicPage = currentPath.includes('index.html');
         
+        updateUI(user);
+        
         if (user) {
             // User is signed in
-            updateUI(true, user);
             if (isLoginPage || isSignupPage) {
-                window.location.href = 'calculator.html';
+                window.location.replace('calculator.html');
             }
         } else {
             // User is signed out
-            updateUI(false);
             if (!isLoginPage && !isSignupPage && !isPublicPage) {
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
             }
         }
     });
@@ -75,14 +75,14 @@ try {
 }
 
 // Update UI based on auth state
-function updateUI(isLoggedIn, user = null) {
+function updateUI(user) {
     const userDropdown = document.getElementById('userDropdown');
     const loginButton = document.getElementById('loginButton');
     const userName = document.getElementById('userName');
 
     if (!userDropdown || !loginButton) return;
 
-    if (isLoggedIn && user) {
+    if (user) {
         userDropdown.style.display = 'block';
         loginButton.style.display = 'none';
         if (userName) {
@@ -112,6 +112,7 @@ window.signInWithGoogle = () => {
     auth.signInWithPopup(provider)
         .then(() => {
             showToast('Successfully signed in!');
+            window.location.replace('calculator.html');
         })
         .catch((error) => {
             console.error('Google sign in error:', error);
@@ -123,6 +124,7 @@ window.signInWithEmail = (email, password) => {
     auth.signInWithEmailAndPassword(email, password)
         .then(() => {
             showToast('Successfully signed in!');
+            window.location.replace('calculator.html');
         })
         .catch((error) => {
             console.error('Email sign in error:', error);
@@ -134,6 +136,7 @@ window.signUpWithEmail = (email, password) => {
     auth.createUserWithEmailAndPassword(email, password)
         .then(() => {
             showToast('Account created successfully!');
+            window.location.replace('calculator.html');
         })
         .catch((error) => {
             console.error('Email sign up error:', error);
