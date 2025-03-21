@@ -7,6 +7,7 @@ const cors = require('cors')({
 });
 const { Groq } = require('groq-sdk');
 const admin = require('firebase-admin');
+const { encrypt, decrypt } = require('./utils/encryption');
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -103,4 +104,23 @@ Format the response in a clear, easy-to-read structure with bullet points.`;
             response.status(500).send('Internal Server Error');
         }
     });
+});
+
+// Function to get Google Maps API key
+exports.getGoogleMapsKey = functions.https.onCall(async (data, context) => {
+    try {
+        const snapshot = await admin.database().ref('googleMaps').once('value');
+        const encryptedKey = snapshot.val();
+        
+        if (!encryptedKey) {
+            throw new Error('Google Maps API key not found');
+        }
+        
+        // Decrypt the API key
+        const decryptedKey = decrypt(encryptedKey);
+        return { apiKey: decryptedKey };
+    } catch (error) {
+        console.error('Error getting Google Maps API key:', error);
+        throw new functions.https.HttpsError('internal', 'Failed to get Google Maps API key');
+    }
 }); 
