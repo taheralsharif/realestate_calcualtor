@@ -113,6 +113,20 @@ Format the response in a clear, easy-to-read structure with bullet points.`;
 exports.getGoogleMapsKey = functions.https.onRequest((req, res) => {
     corsHandler(req, res, async () => {
         try {
+            // Check if user is authenticated
+            const authHeader = req.headers.authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return res.status(401).json({ error: 'Unauthorized' });
+            }
+
+            const idToken = authHeader.split('Bearer ')[1];
+            try {
+                await admin.auth().verifyIdToken(idToken);
+            } catch (error) {
+                console.error('Error verifying auth token:', error);
+                return res.status(401).json({ error: 'Invalid token' });
+            }
+
             const key = await getEncryptedKey('googleMapsKey');
             res.json({ apiKey: key });
         } catch (error) {
