@@ -361,17 +361,17 @@
         }
 
         // Get Firebase services from the global object
-        const { auth, database, functions } = window.firebaseServices || {};
+        const { auth, database } = window.firebaseServices || {};
 
         // Check authentication state
         if (auth) {
             auth.onAuthStateChanged((user) => {
-                const userDropdown = document.getElementById('userDropdown');
-                const loginButton = document.getElementById('loginButton');
-                const userName = document.getElementById('userName');
-
                 if (user) {
                     // User is signed in
+                    const userDropdown = document.getElementById('userDropdown');
+                    const loginButton = document.getElementById('loginButton');
+                    const userName = document.getElementById('userName');
+
                     if (userDropdown && loginButton) {
                         userDropdown.style.display = 'block';
                         loginButton.style.display = 'none';
@@ -383,12 +383,12 @@
                     initGoogleMaps();
                 } else {
                     // User is signed out
-                    window.location.href = 'login.html';
+                    window.location.replace('login.html');
                 }
             });
         } else {
             console.error('Firebase Auth not initialized');
-            window.location.href = 'login.html';
+            window.location.replace('login.html');
         }
 
         // Handle Zillow URL submission
@@ -530,6 +530,31 @@
             } catch (error) {
                 console.error('Error saving AI analysis:', error);
                 showToast('Error saving AI analysis', 'danger');
+            }
+        }
+
+        // Save analysis function
+        async function saveAnalysis(analysisData) {
+            try {
+                if (!auth.currentUser) {
+                    showToast('Please sign in to save analyses', 'danger');
+                    return;
+                }
+
+                const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`).push();
+                await analysisRef.set({
+                    ...analysisData,
+                    id: analysisRef.key,
+                    userId: auth.currentUser.uid,
+                    createdAt: Date.now()
+                });
+
+                showToast('Analysis saved successfully!');
+                return analysisRef.key;
+            } catch (error) {
+                console.error('Error saving analysis:', error);
+                showToast('Error saving analysis: ' + error.message, 'danger');
+                throw error;
             }
         }
 

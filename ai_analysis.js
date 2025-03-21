@@ -5,6 +5,12 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 // Function to get AI analysis using Firebase Cloud Functions
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
+        // Show loading state
+        const aiAnalysisButton = document.querySelector('#aiAnalysisButton');
+        const originalButtonText = aiAnalysisButton.innerHTML;
+        aiAnalysisButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...';
+        aiAnalysisButton.disabled = true;
+
         // Validate input data
         if (!propertyData || typeof propertyData !== 'object') {
             throw new Error('Invalid property data');
@@ -49,11 +55,39 @@ async function getAIAnalysis(propertyData, estimatedRent) {
             throw new Error(errorData.error || 'Failed to get AI analysis');
         }
 
-        const data = await response.json();
-        return data.analysis;
+        const result = await response.json();
+        
+        // Display the AI analysis result
+        const aiAnalysisResult = document.getElementById('aiAnalysisResult');
+        if (aiAnalysisResult) {
+            aiAnalysisResult.innerHTML = `
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title">AI Analysis Results</h5>
+                        <div class="analysis-content">
+                            ${result.analysis}
+                        </div>
+                    </div>
+                </div>
+            `;
+            aiAnalysisResult.style.display = 'block';
+        }
+
+        // Show success message
+        showToast('AI analysis completed successfully', 'success');
+        return result;
+
     } catch (error) {
-        console.error('Error in AI analysis:', error);
+        console.error('AI Analysis error:', error);
+        showToast(error.message || 'Failed to get AI analysis', 'danger');
         throw error;
+    } finally {
+        // Reset button state
+        const aiAnalysisButton = document.querySelector('#aiAnalysisButton');
+        if (aiAnalysisButton) {
+            aiAnalysisButton.innerHTML = originalButtonText;
+            aiAnalysisButton.disabled = false;
+        }
     }
 }
 
