@@ -52,14 +52,40 @@ async function handleGoogleSignIn(e) {
         if (!auth) {
             await initializeFirebase();
         }
+        
         const provider = new firebase.auth.GoogleAuthProvider();
+        // Add scopes if needed
+        provider.addScope('https://www.googleapis.com/auth/userinfo.email');
+        provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
+        
+        // Set custom parameters
+        provider.setCustomParameters({
+            prompt: 'select_account'
+        });
+
         const result = await auth.signInWithPopup(provider);
         console.log('Google sign in successful:', result.user.email);
         showToast('Successfully logged in with Google!');
-        window.location.href = 'calculator.html';
+        
+        // Redirect after successful login
+        setTimeout(() => {
+            window.location.href = 'calculator.html';
+        }, 1000);
     } catch (error) {
         console.error('Google login error:', error);
-        showToast('Error logging in with Google: ' + error.message, 'danger');
+        let errorMessage = 'Error logging in with Google. ';
+        
+        if (error.code === 'auth/popup-blocked') {
+            errorMessage += 'Please allow popups for this site.';
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            errorMessage += 'Login was cancelled.';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            errorMessage += 'Another login attempt is in progress.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        showToast(errorMessage, 'danger');
     }
 }
 

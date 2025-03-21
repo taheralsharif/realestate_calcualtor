@@ -213,6 +213,18 @@
             if (auth && auth.currentUser) {
                 window.location.href = 'calculator.html';
             }
+
+            // Add Google Sign-In button event listener
+            const googleLoginBtn = document.getElementById('googleLoginBtn');
+            if (googleLoginBtn) {
+                googleLoginBtn.addEventListener('click', handleGoogleSignIn);
+            }
+
+            // Add email login form event listener
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleEmailLogin);
+            }
         });
     </script>
 </body>
