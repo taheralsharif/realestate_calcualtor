@@ -208,12 +208,8 @@
             });
         }
 
-        // Check if user is already logged in
-        document.addEventListener('DOMContentLoaded', () => {
-            if (auth && auth.currentUser) {
-                window.location.href = 'calculator.html';
-            }
-
+        // Add event listeners after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
             // Add Google Sign-In button event listener
             const googleLoginBtn = document.getElementById('googleLoginBtn');
             if (googleLoginBtn) {

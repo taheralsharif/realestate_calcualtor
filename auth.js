@@ -11,101 +11,87 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let firebaseApp;
+let app;
 let auth;
-let db;
+let database;
 
-// Initialize Firebase with retry mechanism
-async function initializeFirebase() {
-    try {
-        // Check if Firebase is already initialized
-        if (!firebase.apps.length) {
-            firebaseApp = firebase.initializeApp(firebaseConfig);
-            console.log('Firebase initialized successfully');
-        } else {
-            firebaseApp = firebase.app();
-            console.log('Using existing Firebase app');
-        }
-
-        // Initialize Auth and Database
-        auth = firebase.auth();
-        db = firebase.database();
-
-        // Set up auth state listener
-        auth.onAuthStateChanged((user) => {
-            console.log('Auth state changed:', user ? 'User logged in' : 'User logged out');
-            updateUserProfile(user);
-        });
-
-        return true;
-    } catch (error) {
-        console.error('Firebase initialization error:', error);
-        showToast('Error initializing Firebase. Please refresh the page.', 'danger');
-        return false;
+// Initialize Firebase
+function initializeFirebase() {
+    if (!firebase.apps.length) {
+        app = firebase.initializeApp(firebaseConfig);
+    } else {
+        app = firebase.app();
     }
+    auth = firebase.auth();
+    database = firebase.database();
+}
+
+// Initialize Firebase when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFirebase();
+    setupAuthStateListener();
+});
+
+// Set up authentication state listener
+function setupAuthStateListener() {
+    auth.onAuthStateChanged((user) => {
+        const userDropdown = document.getElementById('userDropdown');
+        const loginButton = document.getElementById('loginButton');
+        const userName = document.getElementById('userName');
+
+        if (user) {
+            console.log('User is signed in:', user.email);
+            if (userDropdown) {
+                userDropdown.style.display = 'block';
+                loginButton.style.display = 'none';
+                userName.textContent = user.displayName || user.email;
+            }
+
+            // If we're on the login page, redirect to calculator
+            if (window.location.pathname.includes('login.html')) {
+                window.location.href = 'calculator.html';
+            }
+        } else {
+            console.log('User is signed out');
+            if (userDropdown) {
+                userDropdown.style.display = 'none';
+                loginButton.style.display = 'block';
+            }
+
+            // If we're not on the login page, redirect to login
+            if (!window.location.pathname.includes('login.html')) {
+                window.location.href = 'login.html';
+            }
+        }
+    });
 }
 
 // Handle Google Sign In
 async function handleGoogleSignIn(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    
     try {
-        // Ensure Firebase is initialized
-        if (!auth) {
-            await initializeFirebase();
-        }
-        
         const provider = new firebase.auth.GoogleAuthProvider();
-        // Add scopes if needed
-        provider.addScope('https://www.googleapis.com/auth/userinfo.email');
-        provider.addScope('https://www.googleapis.com/auth/userinfo.profile');
-        
-        // Set custom parameters
-        provider.setCustomParameters({
-            prompt: 'select_account'
-        });
-
-        console.log('Starting Google Sign In process');
         const result = await auth.signInWithPopup(provider);
         console.log('Google sign in successful:', result.user.email);
-        showToast('Successfully logged in with Google!');
-        
-        // Let the auth state change listener handle the redirect
+        showToast('Successfully logged in!');
     } catch (error) {
-        console.error('Google login error:', error);
-        let errorMessage = 'Error logging in with Google. ';
-        
-        if (error.code === 'auth/popup-blocked') {
-            errorMessage += 'Please allow popups for this site.';
-        } else if (error.code === 'auth/popup-closed-by-user') {
-            errorMessage += 'Login was cancelled.';
-        } else if (error.code === 'auth/cancelled-popup-request') {
-            errorMessage += 'Another login attempt is in progress.';
-        } else {
-            errorMessage += error.message;
-        }
-        
-        showToast(errorMessage, 'danger');
+        console.error('Google sign in error:', error);
+        showToast(error.message, 'danger');
     }
 }
 
 // Handle Email Login
 async function handleEmailLogin(e) {
     e.preventDefault();
+    
     try {
-        if (!auth) {
-            await initializeFirebase();
-        }
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
 
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        if (!userCredential.user.emailVerified) {
-            showToast('Please verify your email address before logging in.', 'danger');
-            await auth.signOut();
-            return;
-        }
         console.log('Email login successful:', userCredential.user.email);
-        window.location.href = 'calculator.html';
+        showToast('Successfully logged in!');
     } catch (error) {
         console.error('Email login error:', error);
         showToast(error.message, 'danger');
@@ -115,76 +101,41 @@ async function handleEmailLogin(e) {
 // Handle Email Signup
 async function handleEmailSignup(e) {
     e.preventDefault();
+    
     try {
-        if (!auth) {
-            await initializeFirebase();
-        }
         const email = document.getElementById('signupEmail').value;
         const password = document.getElementById('signupPassword').value;
 
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-        await userCredential.user.sendEmailVerification();
         console.log('Email signup successful:', userCredential.user.email);
-        showToast('Please check your email to verify your account.');
-        window.location.href = 'calculator.html';
+        showToast('Account created successfully!');
     } catch (error) {
         console.error('Email signup error:', error);
         showToast(error.message, 'danger');
     }
 }
 
-// Update user profile display
-function updateUserProfile(user) {
-    console.log('updateUserProfile called with user:', user ? 'logged in' : 'logged out');
-    const userDropdown = document.getElementById('userDropdown');
-    const loginButton = document.getElementById('loginButton');
-    const userMenuButton = document.getElementById('userMenuButton');
-    const userName = document.getElementById('userName');
-    const calculatorContent = document.getElementById('calculatorContent');
-    
-    if (user) {
-        // User is signed in
-        console.log('User is signed in, updating UI');
-        if (userDropdown) userDropdown.classList.remove('d-none');
-        if (loginButton) loginButton.classList.add('d-none');
-        if (calculatorContent) calculatorContent.classList.remove('d-none');
-        
-        // Update user info
-        if (userName) userName.textContent = user.displayName || user.email;
-        
-        // Handle logout
-        const logoutLink = document.getElementById('logoutLink');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                auth.signOut().then(() => {
-                    window.location.href = 'login.html';
-                }).catch((error) => {
-                    console.error('Error signing out:', error);
-                });
-            });
-        }
+// Handle Logout
+async function handleLogout() {
+    try {
+        await auth.signOut();
+        showToast('Successfully logged out!');
+        window.location.href = 'login.html';
+    } catch (error) {
+        console.error('Logout error:', error);
+        showToast(error.message, 'danger');
+    }
+}
 
-        // Only redirect to calculator if we're on the login page and not already redirecting
-        if (window.location.pathname.includes('login.html') && !window.isRedirecting) {
-            console.log('Redirecting to calculator page');
-            window.isRedirecting = true;
-            window.location.href = 'calculator.html';
-        }
-    } else {
-        // User is signed out
-        console.log('User is signed out, updating UI');
-        if (userDropdown) userDropdown.classList.add('d-none');
-        if (loginButton) loginButton.classList.remove('d-none');
-        if (calculatorContent) calculatorContent.classList.add('d-none');
-        if (userName) userName.textContent = 'User';
-        
-        // Only redirect to login if we're not already on the login page and not already redirecting
-        if (!window.location.pathname.includes('login.html') && !window.isRedirecting) {
-            console.log('Redirecting to login page');
-            window.isRedirecting = true;
-            window.location.href = 'login.html';
-        }
+// Show toast notification
+function showToast(message, type = 'success') {
+    const toast = document.querySelector('.toast');
+    const toastMessage = document.getElementById('toastMessage');
+    if (toast && toastMessage) {
+        toastMessage.textContent = message;
+        toast.classList.remove('bg-success', 'bg-danger');
+        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
+        new bootstrap.Toast(toast).show();
     }
 }
 
@@ -195,11 +146,11 @@ async function saveAnalysis(analysisData) {
             throw new Error('User must be logged in to save analyses');
         }
 
-        if (!db) {
+        if (!database) {
             await initializeFirebase();
         }
 
-        const analysisRef = db.ref(`users/${auth.currentUser.uid}/analyses`);
+        const analysisRef = database.ref(`users/${auth.currentUser.uid}/analyses`);
         const newAnalysisRef = analysisRef.push();
         
         const analysis = {
@@ -226,11 +177,11 @@ async function getSavedAnalyses() {
             throw new Error('User must be logged in to view analyses');
         }
 
-        if (!db) {
+        if (!database) {
             await initializeFirebase();
         }
 
-        const snapshot = await db.ref(`users/${auth.currentUser.uid}/analyses`).once('value');
+        const snapshot = await database.ref(`users/${auth.currentUser.uid}/analyses`).once('value');
         const analyses = [];
         
         snapshot.forEach((childSnapshot) => {
@@ -256,11 +207,11 @@ async function deleteAnalysis(analysisId) {
             throw new Error('User must be logged in to delete analyses');
         }
 
-        if (!db) {
+        if (!database) {
             await initializeFirebase();
         }
 
-        await db.ref(`users/${auth.currentUser.uid}/analyses/${analysisId}`).remove();
+        await database.ref(`users/${auth.currentUser.uid}/analyses/${analysisId}`).remove();
         showToast('Analysis deleted successfully!', 'success');
         
         // Reload analyses list if on history page
@@ -274,24 +225,9 @@ async function deleteAnalysis(analysisId) {
     }
 }
 
-// Show toast notification
-function showToast(message, type = 'success') {
-    const toast = document.querySelector('.toast');
-    const toastMessage = document.getElementById('toastMessage');
-    if (toast && toastMessage) {
-        toastMessage.textContent = message;
-        toast.classList.remove('bg-success', 'bg-danger');
-        toast.classList.add(type === 'success' ? 'bg-success' : 'bg-danger');
-        new bootstrap.Toast(toast).show();
-    }
-}
-
 // Password Reset Function
 async function resetPassword(email) {
     try {
-        if (!auth) {
-            await initializeFirebase();
-        }
         await auth.sendPasswordResetEmail(email);
         showToast('Password reset email sent! Please check your inbox.');
     } catch (error) {
@@ -311,38 +247,5 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('theme', newTheme);
             this.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun-fill"></i>' : '<i class="bi bi-moon-fill"></i>';
         });
-    }
-});
-
-// Initialize Firebase when the page loads
-document.addEventListener('DOMContentLoaded', async () => {
-    try {
-        console.log('Page loaded, initializing Firebase');
-        await initializeFirebase();
-
-        // Set up event listeners after Firebase is initialized
-        const googleLoginBtn = document.getElementById('googleLoginBtn');
-        if (googleLoginBtn) {
-            // Remove any existing event listeners
-            googleLoginBtn.replaceWith(googleLoginBtn.cloneNode(true));
-            // Add the new event listener
-            document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleSignIn);
-            console.log('Google login button event listener added');
-        }
-
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', handleEmailLogin);
-            console.log('Email login form event listener added');
-        }
-
-        const signupForm = document.getElementById('signupForm');
-        if (signupForm) {
-            signupForm.addEventListener('submit', handleEmailSignup);
-            console.log('Signup form event listener added');
-        }
-    } catch (error) {
-        console.error('Error during initialization:', error);
-        showToast('Error initializing application. Please refresh the page.', 'danger');
     }
 }); 
