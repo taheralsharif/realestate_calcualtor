@@ -335,28 +335,34 @@
         // Initialize Google Maps
         async function initGoogleMaps() {
             try {
-                // Get the API key using Firebase callable function
-                const getGoogleMapsKey = firebase.functions().httpsCallable('getGoogleMapsKey');
-                const result = await getGoogleMapsKey();
+                // Get the API key from Firebase Functions
+                const getMapsApiKey = firebase.functions().httpsCallable('getMapsApiKey');
+                const result = await getMapsApiKey();
                 const apiKey = result.data.apiKey;
 
-                if (!apiKey) {
-                    throw new Error('Failed to get Google Maps API key');
-                }
+                // Initialize the map
+                const map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 37.7749, lng: -122.4194 },
+                    zoom: 12
+                });
 
-                // Load Google Maps script
-                const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-                script.async = true;
-                script.defer = true;
-                script.onerror = () => {
-                    console.error('Failed to load Google Maps script');
-                    document.getElementById('mapError').textContent = 'Failed to load Google Maps. Please try again later.';
-                };
-                document.head.appendChild(script);
+                // Initialize the autocomplete
+                const input = document.getElementById('address');
+                const autocomplete = new google.maps.places.Autocomplete(input, {
+                    types: ['address']
+                });
+
+                // Add listener for place selection
+                autocomplete.addListener('place_changed', () => {
+                    const place = autocomplete.getPlace();
+                    if (place.geometry) {
+                        map.setCenter(place.geometry.location);
+                        map.setZoom(15);
+                    }
+                });
             } catch (error) {
                 console.error('Error initializing Google Maps:', error);
-                document.getElementById('mapError').textContent = 'Failed to initialize Google Maps. Please try again later.';
+                showToast('Error initializing Google Maps. Please try again.', 'danger');
             }
         }
 

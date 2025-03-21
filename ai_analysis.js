@@ -9,8 +9,8 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         const analyzeButton = document.getElementById('analyzeWithAI');
         const aiAnalysisLoading = document.getElementById('aiAnalysisLoading');
         
-        analyzeButton.disabled = true;
-        aiAnalysisLoading.classList.remove('d-none');
+        if (analyzeButton) analyzeButton.disabled = true;
+        if (aiAnalysisLoading) aiAnalysisLoading.classList.remove('d-none');
 
         // Validate input data
         if (!propertyData || typeof propertyData !== 'object') {
@@ -31,14 +31,14 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         }
 
         // Get the current user's ID token
-        if (!window.firebaseServices?.auth?.currentUser) {
+        if (!auth.currentUser) {
             throw new Error('Please log in to use AI analysis');
         }
 
-        const idToken = await window.firebaseServices.auth.currentUser.getIdToken();
+        const idToken = await auth.currentUser.getIdToken();
 
         // Make the API call to the Cloud Function
-        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/analyzeProperty', {
+        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/getAIAnalysis', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

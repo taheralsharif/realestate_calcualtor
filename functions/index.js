@@ -14,26 +14,18 @@ const groq = new Groq({
 
 // CORS middleware
 const corsHandler = cors({
-    origin: ['https://taheralsharif.github.io', 'http://localhost:5000', 'http://127.0.0.1:5000'],
+    origin: [
+        'https://taheralsharif.github.io',
+        'http://localhost:5500',
+        'http://127.0.0.1:5500'
+    ],
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
 });
 
+// Function to get AI analysis
 exports.getAIAnalysis = functions.https.onRequest((request, response) => {
-    // Set CORS headers for all responses
-    response.set('Access-Control-Allow-Origin', 'https://taheralsharif.github.io');
-    response.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    response.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    response.set('Access-Control-Allow-Credentials', 'true');
-    response.set('Access-Control-Max-Age', '3600');
-
-    // Handle preflight requests
-    if (request.method === 'OPTIONS') {
-        response.status(204).send('');
-        return;
-    }
-
     return corsHandler(request, response, async () => {
         try {
             if (request.method !== 'POST') {
@@ -64,7 +56,27 @@ exports.getAIAnalysis = functions.https.onRequest((request, response) => {
                 return;
             }
 
-            const prompt = `Analyze this real estate investment:
+            // Get Groq API key from environment variables
+            const groqApiKey = functions.config().groq.api_key;
+            if (!groqApiKey) {
+                throw new Error('Groq API key not configured');
+            }
+
+            // Generate analysis using Groq API
+            const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${groqApiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'mixtral-8x7b-32768',
+                    messages: [{
+                        role: 'system',
+                        content: 'You are a real estate investment analyst. Provide clear, concise analysis with specific recommendations.'
+                    }, {
+                        role: 'user',
+                        content: `Analyze this real estate investment:
 
 Property Details:
 - Price: $${propertyData.price.toLocaleString()}
@@ -81,44 +93,44 @@ Provide a clear, concise analysis with:
 4. Market Outlook (1-2 sentences)
 5. Recommendations (2-3 actionable points)
 
-Format the response in a clear, easy-to-read structure with bullet points.`;
-
-            const completion = await groq.chat.completions.create({
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a real estate investment expert providing detailed analysis of investment opportunities."
-                    },
-                    {
-                        role: "user",
-                        content: prompt
-                    }
-                ],
-                model: "mixtral-8x7b-32768",
-                temperature: 0.7,
-                max_tokens: 1000
+Format the response in a clear, easy-to-read structure with bullet points.`
+                    }],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                })
             });
 
-            const analysis = completion.choices[0]?.message?.content || 'No analysis available';
+            if (!groqResponse.ok) {
+                const errorData = await groqResponse.json();
+                throw new Error(errorData.error?.message || 'Failed to get AI analysis');
+            }
 
-            response.status(200).json({ analysis });
+            const groqData = await groqResponse.json();
+            const analysis = groqData.choices[0].message.content;
+
+            response.json({ analysis });
         } catch (error) {
             console.error('Error in getAIAnalysis:', error);
-            response.status(500).send('Internal Server Error');
+            response.status(500).json({ error: error.message });
         }
     });
 });
 
-// Function to get Google Maps API key
-exports.getGoogleMapsKey = functions.https.onCall(async (data, context) => {
+// Function to get Google Maps API key (as a callable function)
+exports.getMapsApiKey = functions.https.onCall(async (data, context) => {
     // Check if user is authenticated
     if (!context.auth) {
         throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
     }
 
     try {
-        const key = await getEncryptedKey('googleMapsKey');
-        return { apiKey: key };
+        // Get Google Maps API key from environment variables
+        const googleMapsKey = functions.config().googlemaps.api_key;
+        if (!googleMapsKey) {
+            throw new functions.https.HttpsError('failed-precondition', 'Google Maps API key not configured');
+        }
+
+        return { apiKey: googleMapsKey };
     } catch (error) {
         console.error('Error getting Google Maps key:', error);
         throw new functions.https.HttpsError('internal', 'Failed to get API key');
