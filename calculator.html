@@ -361,12 +361,34 @@
             }
         }
 
-        // Initialize the map when the page loads and user is authenticated
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                initGoogleMaps();
+        // Initialize Firebase
+        async function initializeFirebase() {
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDxwXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqX",
+                    authDomain: "real-estate-calculator-3212e.firebaseapp.com",
+                    projectId: "real-estate-calculator-3212e",
+                    storageBucket: "real-estate-calculator-3212e.appspot.com",
+                    messagingSenderId: "123456789012",
+                    appId: "1:123456789012:web:abcdef1234567890"
+                };
+
+                // Initialize Firebase if it hasn't been initialized yet
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+
+                // Initialize services
+                auth = firebase.auth();
+                db = firebase.firestore();
+                functions = firebase.functions();
+
+                return true;
+            } catch (error) {
+                console.error('Error initializing Firebase:', error);
+                throw error;
             }
-        });
+        }
 
         // Wait for Firebase to initialize before setting up auth state listener
         document.addEventListener('DOMContentLoaded', async () => {
@@ -389,18 +411,8 @@
                         const userName = document.getElementById('userName');
                         if (userName) userName.textContent = user.displayName || user.email;
                         
-                        // Handle logout
-                        const logoutLink = document.getElementById('logoutLink');
-                        if (logoutLink) {
-                            logoutLink.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                auth.signOut().then(() => {
-                                    window.location.href = 'login.html';
-                                }).catch((error) => {
-                                    console.error('Error signing out:', error);
-                                });
-                            });
-                        }
+                        // Initialize Google Maps after authentication
+                        initGoogleMaps();
                     } else {
                         // User is signed out
                         if (userDropdown) userDropdown.classList.add('d-none');

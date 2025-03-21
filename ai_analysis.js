@@ -10,7 +10,7 @@ async function getAIAnalysis(propertyData, estimatedRent) {
             throw new Error('Invalid property data');
         }
 
-        // Validate all required fields
+        // Check for required fields
         const requiredFields = ['price', 'propertyType', 'beds', 'baths', 'sqft', 'yearBuilt', 'address'];
         for (const field of requiredFields) {
             if (!propertyData[field]) {
@@ -19,7 +19,7 @@ async function getAIAnalysis(propertyData, estimatedRent) {
         }
 
         // Validate estimated rent
-        if (!estimatedRent || isNaN(estimatedRent) || estimatedRent <= 0) {
+        if (!estimatedRent || estimatedRent <= 0) {
             throw new Error('Please enter a valid estimated monthly rent');
         }
 
@@ -31,35 +31,28 @@ async function getAIAnalysis(propertyData, estimatedRent) {
 
         const idToken = await user.getIdToken();
 
-        // Make the API call
-        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/getAIAnalysis', {
+        // Make the API call to the Cloud Function
+        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/analyzeProperty', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${idToken}`
             },
             body: JSON.stringify({
-                propertyData: {
-                    price: Number(propertyData.price),
-                    propertyType: propertyData.propertyType,
-                    beds: Number(propertyData.beds),
-                    baths: Number(propertyData.baths),
-                    sqft: Number(propertyData.sqft),
-                    yearBuilt: Number(propertyData.yearBuilt),
-                    address: propertyData.address
-                },
-                estimatedRent: Number(estimatedRent)
+                propertyData,
+                estimatedRent
             })
         });
 
         if (!response.ok) {
-            throw new Error('Failed to get AI analysis');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to get AI analysis');
         }
 
         const data = await response.json();
         return data.analysis;
     } catch (error) {
-        console.error('Error in getAIAnalysis:', error);
+        console.error('Error in AI analysis:', error);
         throw error;
     }
 }

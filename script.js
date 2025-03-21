@@ -316,23 +316,48 @@ function addSaveButton() {
 // Save current analysis
 async function saveCurrentAnalysis() {
     try {
-        const results = {
-            propertyName: 'Investment Property',
-            monthlyMortgage: parseFloat(document.querySelector('#results tr:nth-child(1) td:last-child').textContent.replace('$', '')),
-            monthlyExpenses: parseFloat(document.querySelector('#results tr:nth-child(2) td:last-child').textContent.replace('$', '')),
-            totalMonthlyCosts: parseFloat(document.querySelector('#results tr:nth-child(3) td:last-child').textContent.replace('$', '')),
-            monthlyRent: parseFloat(document.querySelector('#results tr:nth-child(4) td:last-child').textContent.replace('$', '')),
-            monthlyProfit: parseFloat(document.querySelector('#results tr:nth-child(5) td:last-child').textContent.replace('$', '')),
-            annualProfit: parseFloat(document.querySelector('#results tr:nth-child(6) td:last-child').textContent.replace('$', '')),
-            cashOnCashReturn: parseFloat(document.querySelector('#results tr:nth-child(7) td:last-child').textContent.replace('%', '')),
-            breakEvenPeriod: parseFloat(document.querySelector('#results tr:nth-child(8) td:last-child').textContent),
-            dscr: parseFloat(document.querySelector('#results tr:nth-child(9) td:last-child').textContent)
+        if (!auth || !auth.currentUser) {
+            showToast('Please log in to save analyses', 'danger');
+            return;
+        }
+
+        const formData = new FormData(document.getElementById('calculatorForm'));
+        const currentResults = window.currentResults;
+
+        if (!currentResults) {
+            showToast('Please calculate results before saving', 'danger');
+            return;
+        }
+
+        const data = {
+            propertyName: formData.get('propertyName') || 'Unnamed Property',
+            propertyPrice: Number(formData.get('propertyPrice')),
+            downPayment: Number(formData.get('downPayment')),
+            interestRate: Number(formData.get('interestRate')),
+            loanTerm: Number(formData.get('loanTerm')),
+            monthlyRent: Number(formData.get('estimatedRent')),
+            monthlyExpenses: Number(formData.get('monthlyExpenses')),
+            insurance: Number(formData.get('insurance')),
+            pmi: Number(formData.get('pmi')),
+            mortgagePayment: currentResults.mortgagePayment,
+            totalMonthlyCosts: currentResults.totalMonthlyCosts,
+            monthlyProfit: currentResults.monthlyProfitLoss,
+            annualProfit: currentResults.annualProfitLoss,
+            cashOnCashReturn: currentResults.cashOnCashReturn,
+            dscr: currentResults.dscr,
+            type: 'calculator',
+            createdAt: new Date().toISOString()
         };
 
-        await saveAnalysis(results);
-        showToast('Analysis saved successfully!');
+        // Save to Firebase
+        const user = auth.currentUser;
+        const analysesRef = firebase.database().ref(`analyses/${user.uid}`);
+        const newAnalysisRef = analysesRef.push();
+        await newAnalysisRef.set(data);
+
+        showToast('Analysis saved successfully!', 'success');
     } catch (error) {
         console.error('Error saving analysis:', error);
-        showToast('Error saving analysis. Please try again.', 'danger');
+        showToast('Error saving analysis', 'danger');
     }
 } 
