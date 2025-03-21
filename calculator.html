@@ -360,70 +360,29 @@
             }
         }
 
-        // Initialize Firebase
-        async function initializeFirebase() {
-            try {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyDxwXqXqXqXqXqXqXqXqXqXqXqXqXqXqXqX",
-                    authDomain: "real-estate-calculator-3212e.firebaseapp.com",
-                    projectId: "real-estate-calculator-3212e",
-                    storageBucket: "real-estate-calculator-3212e.appspot.com",
-                    messagingSenderId: "123456789012",
-                    appId: "1:123456789012:web:abcdef1234567890",
-                    databaseURL: "https://real-estate-calculator-3212e-default-rtdb.firebaseio.com"
-                };
+        // Initialize Firebase services from auth.js
+        let auth = window.firebaseAuth;
+        let database = window.firebaseDatabase;
+        let functions = window.firebaseFunctions;
 
-                // Initialize Firebase if it hasn't been initialized yet
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
+        // Check authentication state
+        auth.onAuthStateChanged((user) => {
+            const userDropdown = document.getElementById('userDropdown');
+            const loginButton = document.getElementById('loginButton');
+            const userName = document.getElementById('userName');
 
-                // Initialize services
-                auth = firebase.auth();
-                database = firebase.database();
-                functions = firebase.functions();
-
-                return true;
-            } catch (error) {
-                console.error('Error initializing Firebase:', error);
-                throw error;
-            }
-        }
-
-        // Wait for Firebase to initialize before setting up auth state listener
-        document.addEventListener('DOMContentLoaded', async () => {
-            try {
-                await initializeFirebase();
-                
-                // Check authentication state
-                auth.onAuthStateChanged((user) => {
-                    const userDropdown = document.getElementById('userDropdown');
-                    const loginButton = document.getElementById('loginButton');
-                    const calculatorContent = document.getElementById('calculatorContent');
-                    
-                    if (user) {
-                        // User is signed in
-                        if (userDropdown) userDropdown.classList.remove('d-none');
-                        if (loginButton) loginButton.classList.add('d-none');
-                        if (calculatorContent) calculatorContent.classList.remove('d-none');
-                        
-                        // Update user info
-                        const userName = document.getElementById('userName');
-                        if (userName) userName.textContent = user.displayName || user.email;
-                        
-                        // Initialize Google Maps after authentication
-                        initGoogleMaps();
-                    } else {
-                        // User is signed out
-                        if (userDropdown) userDropdown.classList.add('d-none');
-                        if (loginButton) loginButton.classList.remove('d-none');
-                        if (calculatorContent) calculatorContent.classList.add('d-none');
-                        window.location.href = 'login.html';
+            if (user) {
+                // User is signed in
+                if (userDropdown && loginButton) {
+                    userDropdown.style.display = 'block';
+                    loginButton.style.display = 'none';
+                    if (userName) {
+                        userName.textContent = user.displayName || user.email;
                     }
-                });
-            } catch (error) {
-                console.error('Error initializing Firebase:', error);
-                showToast('Error initializing application. Please refresh the page.', 'danger');
+                }
+            } else {
+                // User is signed out
+                window.location.href = 'login.html';
             }
         });
 

@@ -10,10 +10,23 @@ const firebaseConfig = {
     databaseURL: "https://real-estate-calculator-3212e-default-rtdb.firebaseio.com"
 };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Initialize Firebase and export services
+let app;
+if (!firebase.apps.length) {
+    app = firebase.initializeApp(firebaseConfig);
+} else {
+    app = firebase.app();
+}
+
 const auth = firebase.auth();
 const database = firebase.database();
+const functions = firebase.functions();
+
+// Make services available globally
+window.firebaseApp = app;
+window.firebaseAuth = auth;
+window.firebaseDatabase = database;
+window.firebaseFunctions = functions;
 
 // Auth state observer
 auth.onAuthStateChanged((user) => {
@@ -29,7 +42,7 @@ auth.onAuthStateChanged((user) => {
     } else {
         // User is signed out
         updateUI(false);
-        if (!isLoginPage) {
+        if (!isLoginPage && !currentPath.includes('signup.html')) {
             window.location.href = 'login.html';
         }
     }
