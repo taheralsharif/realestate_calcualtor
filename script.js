@@ -30,237 +30,124 @@ window.currentResults = null;
 // Calculator functionality
 document.getElementById('calculatorForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
-    try {
-        // Get form data
-        const formData = new FormData(this);
-        const results = calculateInvestment(formData);
-        
-        // Display results
-        displayResults(results);
-        
-        // Show results card
-        document.getElementById('resultsCard').classList.remove('d-none');
-        
-    } catch (error) {
-        console.error('Error calculating investment:', error);
-        showToast(error.message, 'danger');
-    }
+    calculateInvestment();
 });
 
-// Calculate investment metrics
-function calculateInvestment(data) {
-    // Parse input values
-    const propertyPrice = Number(data.get('propertyPrice'));
-    const downPaymentPercent = Number(data.get('downPayment'));
-    const interestRate = Number(data.get('interestRate'));
-    const loanTerm = Number(data.get('loanTerm'));
-    const monthlyRent = Number(data.get('monthlyRent'));
-    const monthlyExpenses = Number(data.get('monthlyExpenses'));
+function calculateInvestment() {
+    try {
+        // Get form values
+        const propertyPrice = parseFloat(document.getElementById('propertyPrice').value);
+        const downPaymentPercent = parseFloat(document.getElementById('downPayment').value) / 100;
+        const interestRate = parseFloat(document.getElementById('interestRate').value) / 100;
+        const loanTerm = parseInt(document.getElementById('loanTerm').value);
+        const monthlyRent = parseFloat(document.getElementById('estimatedRent').value);
+        const monthlyExpenses = parseFloat(document.getElementById('monthlyExpenses').value);
+        const insurance = parseFloat(document.getElementById('insurance').value) || 0;
+        const pmi = parseFloat(document.getElementById('pmi').value) || 0;
 
-    // Calculate loan details
-    const downPayment = (propertyPrice * downPaymentPercent) / 100;
-    const loanAmount = propertyPrice - downPayment;
-    const monthlyInterestRate = (interestRate / 100) / 12;
-    const numberOfPayments = loanTerm * 12;
+        // Calculate loan amount
+        const loanAmount = propertyPrice * (1 - downPaymentPercent);
+        
+        // Calculate monthly mortgage payment
+        const monthlyRate = interestRate / 12;
+        const numberOfPayments = loanTerm * 12;
+        const mortgagePayment = loanAmount * 
+            (monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+            (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
 
-    // Calculate monthly mortgage payment
-    const monthlyMortgage = loanAmount * (monthlyInterestRate * Math.pow(1 + monthlyInterestRate, numberOfPayments)) / (Math.pow(1 + monthlyInterestRate, numberOfPayments) - 1);
+        // Calculate total monthly costs
+        const totalMonthlyCosts = mortgagePayment + monthlyExpenses + insurance + pmi;
 
-    // Calculate monthly and annual metrics
-    const totalMonthlyCosts = monthlyMortgage + monthlyExpenses;
-    const monthlyProfitLoss = monthlyRent - totalMonthlyCosts;
-    const annualProfitLoss = monthlyProfitLoss * 12;
+        // Calculate monthly profit/loss
+        const monthlyProfitLoss = monthlyRent - totalMonthlyCosts;
 
-    // Calculate investment metrics
-    const cashOnCashReturn = (annualProfitLoss / downPayment) * 100;
-    const dscr = monthlyRent / totalMonthlyCosts;
-    const breakEvenPeriod = propertyPrice / annualProfitLoss;
+        // Calculate annual profit/loss
+        const annualProfitLoss = monthlyProfitLoss * 12;
 
-    // Store results in global variable
-    window.currentResults = {
-        monthlyMortgage,
-        monthlyExpenses,
-        monthlyRent,
-        totalMonthlyCosts,
-        monthlyProfitLoss,
-        annualProfitLoss,
-        cashOnCashReturn,
-        dscr,
-        breakEvenPeriod
-    };
+        // Calculate cash-on-cash return
+        const downPaymentAmount = propertyPrice * downPaymentPercent;
+        const annualCashFlow = monthlyProfitLoss * 12;
+        const cashOnCashReturn = (annualCashFlow / downPaymentAmount) * 100;
 
-    return window.currentResults;
+        // Calculate DSCR (Debt Service Coverage Ratio)
+        const dscr = monthlyRent / totalMonthlyCosts;
+
+        // Store results for saving
+        window.currentResults = {
+            mortgagePayment,
+            totalMonthlyCosts,
+            monthlyProfitLoss,
+            annualProfitLoss,
+            cashOnCashReturn,
+            dscr,
+            insurance,
+            pmi
+        };
+
+        // Display results
+        displayResults(window.currentResults);
+    } catch (error) {
+        console.error('Error calculating investment:', error);
+        showToast('Error calculating investment. Please check your inputs.', 'error');
+    }
 }
 
-// Function to display results
 function displayResults(results) {
-    const resultsCard = document.getElementById('resultsCard');
+    const resultsCard = document.getElementById('results');
     if (!resultsCard) {
-        console.error('Results card element not found');
+        console.error('Results card not found');
         return;
     }
 
-    // Format numbers with commas and 2 decimal places
-    const formatNumber = (num) => {
-        return typeof num === 'number' ? num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+    // Format numbers
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(value);
     };
 
-    // Format currency with $ symbol
-    const formatCurrency = (num) => {
-        return typeof num === 'number' ? `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '$0.00';
+    const formatPercent = (value) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }).format(value / 100);
     };
 
-    // Format percentage with % symbol
-    const formatPercentage = (num) => {
-        return typeof num === 'number' ? `${(num * 100).toFixed(2)}%` : '0.00%';
-    };
+    // Update results display
+    document.getElementById('mortgagePayment').textContent = formatCurrency(results.mortgagePayment);
+    document.getElementById('totalMonthlyCosts').textContent = formatCurrency(results.totalMonthlyCosts);
+    document.getElementById('monthlyProfit').textContent = formatCurrency(results.monthlyProfitLoss);
+    document.getElementById('annualProfit').textContent = formatCurrency(results.annualProfitLoss);
+    document.getElementById('cashOnCashReturn').textContent = formatPercent(results.cashOnCashReturn);
+    document.getElementById('dscr').textContent = results.dscr.toFixed(2);
 
-    // Create results HTML
-    const resultsHTML = `
-        <div class="card-body">
-            <h5 class="card-title mb-4">Investment Analysis Results</h5>
-            
-            <!-- Monthly Costs -->
-            <div class="mb-4">
-                <h6 class="text-primary">Monthly Costs</h6>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Mortgage Payment:</span>
-                            <span>${formatCurrency(results.monthlyMortgage)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Property Tax:</span>
-                            <span>${formatCurrency(results.monthlyPropertyTax)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Insurance:</span>
-                            <span>${formatCurrency(results.monthlyInsurance)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>HOA:</span>
-                            <span>${formatCurrency(results.monthlyHOA)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Maintenance:</span>
-                            <span>${formatCurrency(results.monthlyMaintenance)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Vacancy:</span>
-                            <span>${formatCurrency(results.monthlyVacancy)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Management:</span>
-                            <span>${formatCurrency(results.monthlyManagement)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Other Expenses:</span>
-                            <span>${formatCurrency(results.monthlyOtherExpenses)}</span>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <hr>
-                        <div class="d-flex justify-content-between fw-bold">
-                            <span>Total Monthly Costs:</span>
-                            <span>${formatCurrency(results.totalMonthlyCosts)}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Investment Metrics -->
-            <div class="mb-4">
-                <h6 class="text-primary">Investment Metrics</h6>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Monthly Income:</span>
-                            <span>${formatCurrency(results.monthlyIncome)}</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Monthly Profit/Loss:</span>
-                            <span class="${results.monthlyProfitLoss >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatCurrency(results.monthlyProfitLoss)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Cash on Cash Return:</span>
-                            <span class="${results.cashOnCashReturn >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercentage(results.cashOnCashReturn)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Cap Rate:</span>
-                            <span class="${results.capRate >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercentage(results.capRate)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>ROI:</span>
-                            <span class="${results.roi >= 0 ? 'text-success' : 'text-danger'}">
-                                ${formatPercentage(results.roi)}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between">
-                            <span>Break Even Ratio:</span>
-                            <span class="${results.breakEvenRatio <= 1 ? 'text-success' : 'text-danger'}">
-                                ${formatNumber(results.breakEvenRatio)}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Investment Verdict -->
-            <div class="alert ${results.monthlyProfitLoss >= 0 ? 'alert-success' : 'alert-danger'} mb-0">
-                <h6 class="mb-0">
-                    <i class="bi ${results.monthlyProfitLoss >= 0 ? 'bi-check-circle' : 'bi-x-circle'} me-2"></i>
-                    ${results.monthlyProfitLoss >= 0 ? 'Good Investment' : 'Poor Investment'}
-                </h6>
-            </div>
-        </div>
-    `;
-
-    // Update results card content
-    resultsCard.innerHTML = resultsHTML;
-
-    // Add save button if it doesn't exist
-    if (!document.getElementById('saveAnalysisBtn')) {
-        const saveButton = document.createElement('button');
-        saveButton.id = 'saveAnalysisBtn';
-        saveButton.className = 'btn btn-primary mt-3';
-        saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
-        saveButton.onclick = saveCurrentAnalysis;
-        resultsCard.appendChild(saveButton);
+    // Update investment verdict
+    const verdictElement = document.getElementById('investmentVerdict');
+    if (verdictElement) {
+        if (results.monthlyProfitLoss > 0) {
+            verdictElement.textContent = 'Good Investment';
+            verdictElement.className = 'text-success';
+        } else {
+            verdictElement.textContent = 'Poor Investment';
+            verdictElement.className = 'text-danger';
+        }
     }
 
     // Show results card
     resultsCard.classList.remove('d-none');
+
+    // Add save button if not already present
+    if (!document.querySelector('#results .btn-success')) {
+        const saveButton = document.createElement('button');
+        saveButton.className = 'btn btn-success';
+        saveButton.innerHTML = '<i class="bi bi-save me-2"></i>Save Analysis';
+        saveButton.onclick = saveCurrentAnalysis;
+        resultsCard.querySelector('.card-body').appendChild(saveButton);
+    }
 }
 
 // Download functionality

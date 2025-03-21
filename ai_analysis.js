@@ -6,33 +6,61 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 async function getAIAnalysis(propertyData, estimatedRent) {
     try {
         // Validate input data
-        if (!propertyData || !estimatedRent) {
-            throw new Error('Missing required property data or estimated rent');
+        if (!propertyData || typeof propertyData !== 'object') {
+            throw new Error('Invalid property data');
         }
 
-        // Ensure all numeric values are valid
-        const validatedData = {
-            price: Number(propertyData.price) || 0,
-            beds: Number(propertyData.beds) || 0,
-            baths: Number(propertyData.baths) || 0,
-            sqft: Number(propertyData.sqft) || 0,
-            yearBuilt: Number(propertyData.yearBuilt) || 0,
-            propertyType: propertyData.propertyType || 'Unknown',
-            address: propertyData.address || 'Unknown Address',
-            estimatedRent: Number(estimatedRent) || 0
-        };
+        // Validate all required fields
+        const requiredFields = ['price', 'propertyType', 'beds', 'baths', 'sqft', 'yearBuilt', 'address'];
+        for (const field of requiredFields) {
+            if (!propertyData[field]) {
+                throw new Error(`Missing required field: ${field}`);
+            }
+        }
 
-        // Call Firebase Cloud Function
-        const getAIAnalysis = firebase.functions().httpsCallable('getAIAnalysis');
-        const result = await getAIAnalysis({
-            propertyData: validatedData,
-            estimatedRent: validatedData.estimatedRent
+        // Validate estimated rent
+        if (!estimatedRent || isNaN(estimatedRent) || estimatedRent <= 0) {
+            throw new Error('Please enter a valid estimated monthly rent');
+        }
+
+        // Get the current user's ID token
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            throw new Error('Please log in to use AI analysis');
+        }
+
+        const idToken = await user.getIdToken();
+
+        // Make the API call
+        const response = await fetch('https://us-central1-real-estate-calculator-3212e.cloudfunctions.net/getAIAnalysis', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({
+                propertyData: {
+                    price: Number(propertyData.price),
+                    propertyType: propertyData.propertyType,
+                    beds: Number(propertyData.beds),
+                    baths: Number(propertyData.baths),
+                    sqft: Number(propertyData.sqft),
+                    yearBuilt: Number(propertyData.yearBuilt),
+                    address: propertyData.address
+                },
+                estimatedRent: Number(estimatedRent)
+            })
         });
 
-        return result.data;
+        if (!response.ok) {
+            throw new Error('Failed to get AI analysis');
+        }
+
+        const data = await response.json();
+        return data.analysis;
     } catch (error) {
-        console.error('Error getting AI analysis:', error);
-        throw new Error('Failed to get AI analysis. Please try again.');
+        console.error('Error in getAIAnalysis:', error);
+        throw error;
     }
 }
 

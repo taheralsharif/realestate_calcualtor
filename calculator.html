@@ -203,6 +203,23 @@
                                         <input type="number" class="form-control" id="monthlyExpenses" name="monthlyExpenses" value="0" required>
                                     </div>
                                 </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="insurance" class="form-label">Monthly Insurance</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="insurance" name="insurance" value="0" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="pmi" class="form-label">PMI (if applicable)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="pmi" name="pmi" value="0" required>
+                                    </div>
+                                </div>
                                 <div class="col-md-6 mb-3 d-flex align-items-end">
                                     <button type="button" class="btn btn-primary" id="analyzeWithAI">
                                         <i class="bi bi-robot me-2"></i>Analyze with AI
@@ -316,9 +333,10 @@
     <script src="ai_analysis.js"></script>
     <script src="script.js"></script>
     <script>
+        // Initialize Google Maps
         async function initGoogleMaps() {
             try {
-                // Get the API key from Firebase
+                // Get the API key using Firebase callable function
                 const getGoogleMapsKey = firebase.functions().httpsCallable('getGoogleMapsKey');
                 const result = await getGoogleMapsKey();
                 const apiKey = result.data.apiKey;
@@ -329,23 +347,25 @@
 
                 // Load Google Maps script
                 const script = document.createElement('script');
-                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initGooglePlaces`;
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
                 script.async = true;
                 script.defer = true;
                 script.onerror = () => {
-                    console.error('Failed to load Google Maps API');
-                    showToast('Failed to load Google Maps. Please check your internet connection.', 'error');
+                    console.error('Failed to load Google Maps script');
+                    document.getElementById('mapError').textContent = 'Failed to load Google Maps. Please try again later.';
                 };
                 document.head.appendChild(script);
             } catch (error) {
                 console.error('Error initializing Google Maps:', error);
-                showToast('Error initializing Google Maps. Please try again later.', 'error');
+                document.getElementById('mapError').textContent = 'Failed to initialize Google Maps. Please try again later.';
             }
         }
 
-        // Initialize Google Maps when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initGoogleMaps();
+        // Initialize the map when the page loads and user is authenticated
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                initGoogleMaps();
+            }
         });
 
         // Wait for Firebase to initialize before setting up auth state listener
@@ -491,6 +511,8 @@
                     loanTerm: Number(formData.get('loanTerm')),
                     monthlyRent: Number(formData.get('estimatedRent')),
                     monthlyExpenses: Number(formData.get('monthlyExpenses')),
+                    insurance: Number(formData.get('insurance')),
+                    pmi: Number(formData.get('pmi')),
                     ...currentResults,
                     type: 'calculator'
                 };
@@ -522,6 +544,8 @@
                     propertyName: formData.get('propertyName') || 'Unnamed Property',
                     propertyPrice: Number(formData.get('propertyPrice')),
                     estimatedRent: Number(formData.get('estimatedRent')),
+                    insurance: Number(formData.get('insurance')),
+                    pmi: Number(formData.get('pmi')),
                     aiAnalysis: aiAnalysisContent.innerHTML,
                     type: 'ai'
                 };
