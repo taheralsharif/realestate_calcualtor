@@ -134,39 +134,92 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="auth.js"></script>
     <script>
-        // Handle form submission
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            signInWithEmail(email, password);
-        });
+        // Track if we've initialized
+        let hasInitialized = false;
 
-        // Handle remember me
-        const rememberMe = document.getElementById('rememberMe');
-        const emailInput = document.getElementById('email');
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (hasInitialized) return;
+            hasInitialized = true;
 
-        // Load remembered email
-        if (localStorage.getItem('rememberedEmail')) {
-            emailInput.value = localStorage.getItem('rememberedEmail');
-            rememberMe.checked = true;
-        }
+            // Get form elements
+            const loginForm = document.getElementById('loginForm');
+            const googleSignInBtn = document.getElementById('googleSignIn');
+            const emailInput = document.getElementById('email');
+            const rememberMeCheckbox = document.getElementById('rememberMe');
 
-        // Update remembered email
-        rememberMe.addEventListener('change', function() {
-            if (this.checked) {
-                localStorage.setItem('rememberedEmail', emailInput.value);
-            } else {
-                localStorage.removeItem('rememberedEmail');
+            // Check for saved email
+            const savedEmail = localStorage.getItem('rememberedEmail');
+            if (savedEmail) {
+                emailInput.value = savedEmail;
+                rememberMeCheckbox.checked = true;
+            }
+
+            // Handle Google Sign-In
+            if (googleSignInBtn) {
+                googleSignInBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    try {
+                        await window.firebaseServices.auth.signInWithGoogle();
+                    } catch (error) {
+                        showToast(error.message, 'danger');
+                    }
+                });
+            }
+
+            // Handle email login
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const email = emailInput.value;
+                    const password = document.getElementById('password').value;
+
+                    // Handle remember me
+                    if (rememberMeCheckbox.checked) {
+                        localStorage.setItem('rememberedEmail', email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
+
+                    try {
+                        await window.firebaseServices.auth.signInWithEmail(email, password);
+                    } catch (error) {
+                        showToast(error.message, 'danger');
+                    }
+                });
+            }
+
+            // Handle forgot password
+            const forgotPasswordLink = document.getElementById('forgotPassword');
+            if (forgotPasswordLink) {
+                forgotPasswordLink.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const email = emailInput.value;
+                    if (!email) {
+                        showToast('Please enter your email address', 'warning');
+                        return;
+                    }
+
+                    try {
+                        await window.firebaseServices.auth.sendPasswordResetEmail(email);
+                        showToast('Password reset email sent!', 'success');
+                    } catch (error) {
+                        showToast(error.message, 'danger');
+                    }
+                });
             }
         });
 
-        // Handle password reset
-        function handlePasswordReset() {
-            const email = document.getElementById('resetEmail').value;
-            if (email) {
-                resetPassword(email);
-                bootstrap.Modal.getInstance(document.getElementById('passwordResetModal')).hide();
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toast = document.querySelector('.toast');
+            const toastBody = document.getElementById('toastMessage');
+            if (toast && toastBody) {
+                toastBody.textContent = message;
+                toast.classList.remove('bg-success', 'bg-danger', 'bg-warning');
+                toast.classList.add(`bg-${type}`);
+                const bsToast = new bootstrap.Toast(toast);
+                bsToast.show();
             }
         }
     </script>
