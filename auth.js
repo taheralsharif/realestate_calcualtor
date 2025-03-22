@@ -66,23 +66,14 @@ function setupAuthStateListener() {
 // Initialize auth state listener
 setupAuthStateListener();
 
-// Google Sign-In
-async function signInWithGoogle() {
-    try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await auth.signInWithPopup(provider);
-    } catch (error) {
-        console.error('Google sign-in error:', error);
-        throw error;
-    }
-}
-
 // Email/Password Sign-In
 async function signInWithEmail(email, password) {
     try {
         await auth.signInWithEmailAndPassword(email, password);
+        showToast('Successfully signed in!');
     } catch (error) {
         console.error('Email sign-in error:', error);
+        showToast(error.message, 'danger');
         throw error;
     }
 }
@@ -91,8 +82,10 @@ async function signInWithEmail(email, password) {
 async function signUpWithEmail(email, password) {
     try {
         await auth.createUserWithEmailAndPassword(email, password);
+        showToast('Account created successfully!');
     } catch (error) {
         console.error('Email sign-up error:', error);
+        showToast(error.message, 'danger');
         throw error;
     }
 }
@@ -101,9 +94,11 @@ async function signUpWithEmail(email, password) {
 async function signOut() {
     try {
         await auth.signOut();
+        showToast('Successfully signed out!');
         window.location.replace('login.html');
     } catch (error) {
         console.error('Sign-out error:', error);
+        showToast(error.message, 'danger');
         throw error;
     }
 }
@@ -111,7 +106,6 @@ async function signOut() {
 // Export functions
 window.firebaseServices.auth = {
     ...auth,
-    signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
     signOut
